@@ -5,330 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeshSafe — Report an Incident</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/report.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        .report-body {
-            background: #F7F3FF;
-            min-height: 100vh;
-            padding: 32px 20px;
-        }
-        .report-container {
-            max-width: 860px;
-            margin: 0 auto;
-        }
-        .page-header {
-            margin-bottom: 28px;
-        }
-        .page-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1A1A2E;
-            margin-bottom: 4px;
-        }
-        .page-header p {
-            font-size: 14px;
-            color: #718096;
-        }
-
-        /* ── Type Selector ── */
-        .type-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .type-card {
-            background: #ffffff;
-            border: 2px solid #F0E6E6;
-            border-radius: 14px;
-            padding: 18px 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .type-card:hover {
-            border-color: #FFB3A7;
-            transform: translateY(-2px);
-        }
-        .type-card.selected {
-            border-color: #FF6B6B;
-            background: #FFF0EE;
-        }
-        .type-icon {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        .type-name {
-            font-size: 12px;
-            font-weight: 700;
-            color: #1A1A2E;
-        }
-
-        /* ── Form Card ── */
-        .form-card {
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #F0E6E6;
-            padding: 28px;
-            margin-bottom: 16px;
-        }
-        .form-card-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1A1A2E;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .form-card-title i { color: #FF6B6B; }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .form-group.full { grid-column: 1 / -1; }
-        .form-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .form-input, .form-select, .form-textarea {
-            padding: 10px 14px;
-            border: 1.5px solid #F0E6E6;
-            border-radius: 10px;
-            font-size: 13px;
-            color: #1A1A2E;
-            font-family: 'Segoe UI', sans-serif;
-            background: #FAFAFA;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            outline: none;
-            width: 100%;
-        }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            border-color: #FF6B6B;
-            box-shadow: 0 0 0 3px rgba(255,107,107,0.1);
-            background: #ffffff;
-        }
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-            line-height: 1.6;
-        }
-
-        /* ── Severity ── */
-        .severity-row {
-            display: flex;
-            gap: 10px;
-        }
-        .severity-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #F0E6E6;
-            background: #FAFAFA;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .severity-btn.low.selected   { border-color: #48BB78; background: #EDFFF5; color: #48BB78; }
-        .severity-btn.medium.selected{ border-color: #FFB347; background: #FFF8EE; color: #FFB347; }
-        .severity-btn.high.selected  { border-color: #FF6B6B; background: #FFF0EE; color: #FF6B6B; }
-        .severity-btn:hover { transform: translateY(-1px); }
-
-        /* ── Photo Upload ── */
-        .upload-zone {
-            border: 2px dashed #F0E6E6;
-            border-radius: 12px;
-            padding: 28px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: #FAFAFA;
-        }
-        .upload-zone:hover {
-            border-color: #FF6B6B;
-            background: #FFF0EE;
-        }
-        .upload-zone i {
-            font-size: 28px;
-            color: #FF6B6B;
-            margin-bottom: 8px;
-            display: block;
-        }
-        .upload-zone p {
-            font-size: 13px;
-            color: #718096;
-        }
-        .upload-zone span {
-            font-size: 11px;
-            color: #A0AEC0;
-        }
-        #photo-input { display: none; }
-        #preview-wrap {
-            display: none;
-            margin-top: 12px;
-        }
-        #preview-wrap img {
-            width: 100%;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        /* ── Submit ── */
-        .submit-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 8px;
-        }
-        .submit-note {
-            font-size: 12px;
-            color: #A0AEC0;
-        }
-        .submit-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 600;
-            padding: 12px 28px;
-            border-radius: 25px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
-        }
-
-        /* ── Success State ── */
-        .success-screen {
-            display: none;
-            text-align: center;
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #F0E6E6;
-            padding: 60px 40px;
-        }
-        .success-screen.show { display: block; }
-        .success-icon {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #48BB78, #38A169);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 28px;
-            color: #ffffff;
-        }
-        .success-screen h2 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1A1A2E;
-            margin-bottom: 8px;
-        }
-        .success-screen p {
-            font-size: 14px;
-            color: #718096;
-            margin-bottom: 24px;
-        }
-        .success-id {
-            display: inline-block;
-            background: #F7F3FF;
-            border: 1px solid #E2D9F3;
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #553C9A;
-            margin-bottom: 28px;
-            letter-spacing: 0.05em;
-        }
-
-        /* ── Recent Reports ── */
-        .recent-card {
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #F0E6E6;
-            padding: 24px;
-            margin-top: 24px;
-        }
-        .recent-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1A1A2E;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .recent-title i { color: #FF6B6B; }
-        .report-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 0;
-            border-bottom: 1px solid #FFF0EE;
-        }
-        .report-item:last-child { border-bottom: none; }
-        .report-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .dot-red    { background: #FF6B6B; }
-        .dot-amber  { background: #FFB347; }
-        .dot-blue   { background: #4A90D9; }
-        .report-info { flex: 1; }
-        .report-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1A1A2E;
-        }
-        .report-meta {
-            font-size: 11px;
-            color: #718096;
-        }
-        .report-badge {
-            font-size: 11px;
-            padding: 3px 10px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-        .badge-verify { background: #FFF8EE; color: #FFB347; }
-        .badge-conf   { background: #FFF0EE; color: #FF6B6B; }
-        .badge-res    { background: #EDFFF5; color: #48BB78; }
-
-        /* Navbar */
-        .nav-location { font-size:13px; color:#4A5568; display:flex; align-items:center; gap:6px; }
-        .nav-location i { color:#FF6B6B; }
-        .nav-alert-badge { background:rgba(255,107,107,0.1); color:#FF6B6B; font-size:12px; font-weight:600; padding:6px 14px; border-radius:20px; border:1px solid rgba(255,107,107,0.2); }
-        .nav-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#FF6B6B,#FF8E53); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; }
-        .nav-right { display:flex; align-items:center; gap:12px; }
-    </style>
 </head>
 <body>
+
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">🛡️ DeshSafe</div>
@@ -353,7 +34,58 @@
                 <p>Spotted a disaster or crisis near you? Report it so others can stay safe.</p>
             </div>
 
-            <!-- Success Screen (hidden by default) -->
+            <div class="sos-strip">
+                <div class="sos-left">
+                    <p class="sos-label">⚡ Emergency?</p>
+                    <p class="sos-heading">In immediate danger?</p>
+                    <p class="sos-sub">Call 112 or alert your emergency contacts instantly</p>
+                </div>
+                <button class="sos-btn" onclick="openSOS()">SOS</button>
+            </div>
+
+            <div class="sos-overlay" id="sos-overlay" onclick="closeSOS(event)">
+                <div class="sos-modal">
+                    <div class="modal-sos-ring">SOS</div>
+                    <p class="modal-title">Send Emergency Alert</p>
+                    <p class="modal-sub">Choose how you want to call for help right now</p>
+                    <div class="sos-actions">
+                        <a class="sos-action-btn call" href="tel:112">
+                            <div class="action-btn-icon"><i class="fa-solid fa-phone"></i></div>
+                            <div class="action-btn-text">
+                                <span class="action-btn-title">Call 112</span>
+                                <span class="action-btn-desc">India's national emergency number</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right action-btn-arrow"></i>
+                        </a>
+                        <a class="sos-action-btn whatsapp" href="https://wa.me/?text=🆘 SOS! I need emergency help. My location: New Delhi, India. Please call 112 or come to my location immediately. — Sent via DeshSafe" target="_blank">
+                            <div class="action-btn-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                            <div class="action-btn-text">
+                                <span class="action-btn-title">WhatsApp SOS</span>
+                                <span class="action-btn-desc">Send alert to a contact on WhatsApp</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right action-btn-arrow"></i>
+                        </a>
+                        <a class="sos-action-btn email" href="mailto:?subject=🆘 EMERGENCY SOS — DeshSafe Alert&body=EMERGENCY ALERT sent via DeshSafe.%0A%0AI need immediate help.%0ALocation: New Delhi, India%0ATime: " id="sos-email-btn">
+                            <div class="action-btn-icon"><i class="fa-solid fa-envelope"></i></div>
+                            <div class="action-btn-text">
+                                <span class="action-btn-title">Send SOS Email</span>
+                                <span class="action-btn-desc">Email your emergency contact</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right action-btn-arrow"></i>
+                        </a>
+                        <a class="sos-action-btn sms" href="sms:?body=🆘 SOS! I need emergency help. My location: New Delhi, India. Please call 112. — Sent via DeshSafe">
+                            <div class="action-btn-icon"><i class="fa-solid fa-comment-sms"></i></div>
+                            <div class="action-btn-text">
+                                <span class="action-btn-title">Send SMS</span>
+                                <span class="action-btn-desc">Text message to any contact</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right action-btn-arrow"></i>
+                        </a>
+                    </div>
+                    <button class="modal-close" onclick="closeSOS()">Cancel — I'm Safe</button>
+                </div>
+            </div>
+
             <div class="success-screen" id="success-screen">
                 <div class="success-icon"><i class="fa-solid fa-check"></i></div>
                 <h2>Report Submitted!</h2>
@@ -365,10 +97,8 @@
                 </a>
             </div>
 
-            <!-- Form (shown by default) -->
             <div id="report-form">
 
-                <!-- Step 1: Incident Type -->
                 <div class="form-card">
                     <p class="form-card-title"><i class="fa-solid fa-triangle-exclamation"></i> What are you reporting?</p>
                     <div class="type-grid">
@@ -399,7 +129,6 @@
                     </div>
                 </div>
 
-                <!-- Step 2: Details -->
                 <div class="form-card">
                     <p class="form-card-title"><i class="fa-solid fa-pen-to-square"></i> Incident Details</p>
                     <div class="form-grid">
@@ -430,9 +159,8 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Photo -->
                 <div class="form-card">
-                    <p class="form-card-title"><i class="fa-solid fa-camera"></i> Add a Photo <span style="font-size:11px; font-weight:400; color:#A0AEC0;">(optional)</span></p>
+                    <p class="form-card-title"><i class="fa-solid fa-camera"></i> Add a Photo <span class="optional-label">(optional)</span></p>
                     <div class="upload-zone" onclick="document.getElementById('photo-input').click()">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                         <p>Click to upload a photo of the incident</p>
@@ -444,9 +172,8 @@
                     </div>
                 </div>
 
-                <!-- Submit -->
                 <div class="submit-row">
-                    <p class="submit-note"><i class="fa-solid fa-lock" style="color:#A0AEC0;"></i> Your report is anonymous by default</p>
+                    <p class="submit-note"><i class="fa-solid fa-lock"></i> Your report is anonymous by default</p>
                     <button class="submit-btn" onclick="submitReport()">
                         <i class="fa-solid fa-paper-plane"></i> Submit Report
                     </button>
@@ -454,7 +181,6 @@
 
             </div>
 
-            <!-- Recent Community Reports -->
             <div class="recent-card">
                 <p class="recent-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Community Reports</p>
                 <div class="report-item">
@@ -487,51 +213,6 @@
     </main>
 
     <script src="js/main.js"></script>
-    <script>
-        // Type selector
-        function selectType(el) {
-            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-        }
-
-        // Severity selector
-        function selectSeverity(level, btn) {
-            document.querySelectorAll('.severity-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-        }
-
-        // Photo preview
-        function previewPhoto(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                document.getElementById('preview-img').src = ev.target.result;
-                document.getElementById('preview-wrap').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Submit
-        function submitReport() {
-            const title = document.getElementById('incident-title').value.trim();
-            const desc  = document.getElementById('incident-desc').value.trim();
-            const loc   = document.getElementById('incident-location').value.trim();
-
-            if (!title || !desc || !loc) {
-                alert('Please fill in the Title, Description, and Location before submitting.');
-                return;
-            }
-
-            // Generate a random report ID
-            const id = 'DS-' + Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('report-id').textContent = 'Report ID: #' + id;
-
-            // Show success screen
-            document.getElementById('report-form').style.display = 'none';
-            document.getElementById('success-screen').classList.add('show');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    </script>
+    <script src="js/report.js"></script>
 </body>
 </html>

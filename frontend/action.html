@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">🛡️ DeshSafe</div>
@@ -20,7 +21,7 @@
             </div>
             <div class="nav-right">
                 <span class="nav-alert-badge">⚠️ 2 Alerts</span>
-                <div class="nav-avatar">AR</div>
+                <a href="profile.html" class="nav-avatar" title="My Profile">AP</a>
             </div>
         </div>
     </nav>
@@ -30,7 +31,7 @@
 
             <div class="alert-context">
                 <div class="context-left">
-                    <a class="back-btn" href="dashboard.html">
+                    <a class="back-btn" href="dashboard.html" aria-label="Back to dashboard">
                         <i class="fa-solid fa-arrow-left"></i>
                     </a>
                     <div class="context-info">
@@ -51,25 +52,26 @@
                         <h2 class="steps-title">Your Personalized Action Plan</h2>
                         <p class="steps-sub">Based on your profile — Age 21, Asthma condition, Family of 4</p>
                     </div>
+
                     <div class="progress-bar-container">
-                            <div class="progress-bar-top">
-                                <span class="progress-label">Progress</span>
-                                <span class="progress-percent" id="progress-percent">0%</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-fill" id="progress-fill"></div>
-                            </div>
+                        <div class="progress-bar-top">
+                            <span class="progress-label">Progress</span>
+                            <span class="progress-percent" id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
                     </div>
+
                     <div class="steps-list">
+
                         <div class="step-item">
                             <div class="step-number">1</div>
                             <div class="step-content">
                                 <h3 class="step-title">Hydrate Immediately</h3>
                                 <p class="step-desc">Drink at least 500ml of water right now. With your asthma, dehydration worsens breathing difficulty in extreme heat.</p>
                             </div>
-                            <div class="step-check">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
+                            <div class="step-check"><i class="fa-solid fa-check"></i></div>
                         </div>
 
                         <div class="step-item">
@@ -78,9 +80,7 @@
                                 <h3 class="step-title">Stay Indoors 11am–5pm</h3>
                                 <p class="step-desc">Do not go outside during peak heat hours. Your asthma makes heat exposure especially dangerous today.</p>
                             </div>
-                            <div class="step-check">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
+                            <div class="step-check"><i class="fa-solid fa-check"></i></div>
                         </div>
 
                         <div class="step-item">
@@ -89,9 +89,7 @@
                                 <h3 class="step-title">Close South-Facing Windows</h3>
                                 <p class="step-desc">Close all curtains and windows on the south side of your home by 12pm to block direct sunlight.</p>
                             </div>
-                            <div class="step-check">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
+                            <div class="step-check"><i class="fa-solid fa-check"></i></div>
                         </div>
 
                         <div class="step-item">
@@ -100,9 +98,7 @@
                                 <h3 class="step-title">Check on Family Members</h3>
                                 <p class="step-desc">Check on elderly family members every 2 hours. Heatstroke risk is very high for ages 60+ today.</p>
                             </div>
-                            <div class="step-check">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
+                            <div class="step-check"><i class="fa-solid fa-check"></i></div>
                         </div>
 
                         <div class="step-item">
@@ -111,9 +107,7 @@
                                 <h3 class="step-title">Keep Inhaler Ready</h3>
                                 <p class="step-desc">Hot air can trigger asthma attacks. Keep your inhaler within reach at all times today.</p>
                             </div>
-                            <div class="step-check">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
+                            <div class="step-check"><i class="fa-solid fa-check"></i></div>
                         </div>
 
                     </div>
@@ -124,9 +118,7 @@
                     <div class="nearby-card">
                         <h3 class="nearby-title">Nearest Cooling Centers</h3>
                         <div class="nearby-item">
-                            <div class="nearby-icon">
-                                <i class="fa-solid fa-building-columns"></i>
-                            </div>
+                            <div class="nearby-icon"><i class="fa-solid fa-building-columns"></i></div>
                             <div class="nearby-info">
                                 <p class="nearby-name">Connaught Place Shelter</p>
                                 <p class="nearby-dist">1.2 km away</p>
@@ -134,9 +126,7 @@
                             <a href="#" class="nearby-btn">Go →</a>
                         </div>
                         <div class="nearby-item">
-                            <div class="nearby-icon">
-                                <i class="fa-solid fa-hospital"></i>
-                            </div>
+                            <div class="nearby-icon"><i class="fa-solid fa-hospital"></i></div>
                             <div class="nearby-info">
                                 <p class="nearby-name">Ram Manohar Lohia Hospital</p>
                                 <p class="nearby-dist">3.4 km away</p>
@@ -144,9 +134,7 @@
                             <a href="#" class="nearby-btn">Go →</a>
                         </div>
                         <div class="nearby-item">
-                            <div class="nearby-icon">
-                                <i class="fa-solid fa-store"></i>
-                            </div>
+                            <div class="nearby-icon"><i class="fa-solid fa-store"></i></div>
                             <div class="nearby-info">
                                 <p class="nearby-name">Select City Walk Mall</p>
                                 <p class="nearby-dist">4.1 km away</p>
@@ -176,11 +164,10 @@
                     </div>
 
                 </div>
-
             </div>
         </div>
     </main>
 
+    <script src="js/main.js"></script>
 </body>
-<script src="js/main.js"></script>
 </html>

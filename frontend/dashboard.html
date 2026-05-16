@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">🛡️ DeshSafe</div>
@@ -20,41 +21,47 @@
             </div>
             <div class="nav-right">
                 <span class="nav-alert-badge">⚠️ 2 Alerts</span>
-                <div class="nav-avatar">AR</div>
+                <a href="profile.html" class="nav-avatar" title="My Profile">AP</a>
             </div>
         </div>
     </nav>
+
     <main class="dashboard-body">
         <div class="dashboard-container">
+
             <div class="dashboard-greeting">
                 <h1 class="greeting-title">Good afternoon, Anushka 👋</h1>
-                <p class="greeting-sub" id="greeting-date">Wednesday, 6 May 2026 · Stay safe today — 2 active alerts in your area</p>
+                <p class="greeting-sub" id="greeting-date">Loading…</p>
             </div>
+
             <div class="stats-row">
                 <div class="stat-card">
                     <p class="stat-label">Temperature</p>
-                    <p class="stat-value danger" id="stat-temp">42°C</p>
+                    <p class="stat-value danger" id="stat-temp">—</p>
                 </div>
                 <div class="stat-card">
                     <p class="stat-label">AQI</p>
-                    <p class="stat-value warning"  id="stat-aqi">168</p>
+                    <p class="stat-value warning" id="stat-aqi">—</p>
                 </div>
                 <div class="stat-card">
                     <p class="stat-label">Humidity</p>
-                    <p class="stat-value" id="stat-humidity">28%</p>
+                    <p class="stat-value" id="stat-humidity">—</p>
                 </div>
                 <div class="stat-card">
                     <p class="stat-label">Risk Level</p>
-                    <p class="stat-value danger" id="stat-risk">High</p>
+                    <p class="stat-value danger">High</p>
                 </div>
             </div>
+
             <div class="dashboard-content">
+
                 <div class="content-left">
                     <div class="alerts-section">
                         <div class="section-header">
                             <h2 class="section-title">Active Alerts</h2>
                             <a href="#" class="section-link">View all →</a>
                         </div>
+
                         <div class="alert-card alert-danger">
                             <div class="alert-top">
                                 <div class="alert-type">
@@ -74,6 +81,7 @@
                                 <a href="action.html" class="alert-action-btn">View My Action Plan →</a>
                             </div>
                         </div>
+
                         <div class="alert-card alert-warning">
                             <div class="alert-top">
                                 <div class="alert-type">
@@ -94,7 +102,9 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="content-right">
+
                     <div class="weather-card">
                         <p class="weather-location"><i class="fa-solid fa-location-dot"></i> New Delhi, India</p>
                         <h2 class="weather-temp">42°C</h2>
@@ -114,6 +124,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="safety-card">
                         <h3 class="safety-title">Your Safety Status</h3>
                         <div class="safety-item">
@@ -133,6 +144,7 @@
                             <p>No cyclone risk in your region</p>
                         </div>
                     </div>
+
                     <div class="history-card">
                         <div class="section-header">
                             <h3 class="section-title">Recent Alerts</h3>
@@ -164,10 +176,10 @@
                     </div>
 
                 </div>
-
             </div>
         </div>
     </main>
+
+    <script src="js/main.js"></script>
 </body>
-<script src="js/main.js"></script>
 </html>
