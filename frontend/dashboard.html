@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeshSafe — Your Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">🛡️ DeshSafe</div>
+            <div class="nav-center">
+                <span class="nav-location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    New Delhi, India
+                </span>
+            </div>
+            <div class="nav-right">
+                <span class="nav-alert-badge">⚠️ 2 Alerts</span>
+                <div class="nav-avatar">AR</div>
+            </div>
+        </div>
+    </nav>
+    <main class="dashboard-body">
+        <div class="dashboard-container">
+            <div class="dashboard-greeting">
+                <h1 class="greeting-title">Good afternoon, Anushka 👋</h1>
+                <p class="greeting-sub" id="greeting-date">Wednesday, 6 May 2026 · Stay safe today — 2 active alerts in your area</p>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card">
+                    <p class="stat-label">Temperature</p>
+                    <p class="stat-value danger" id="stat-temp">42°C</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">AQI</p>
+                    <p class="stat-value warning"  id="stat-aqi">168</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Humidity</p>
+                    <p class="stat-value" id="stat-humidity">28%</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Risk Level</p>
+                    <p class="stat-value danger" id="stat-risk">High</p>
+                </div>
+            </div>
+            <div class="dashboard-content">
+                <div class="content-left">
+                    <div class="alerts-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Active Alerts</h2>
+                            <a href="#" class="section-link">View all →</a>
+                        </div>
+                        <div class="alert-card alert-danger">
+                            <div class="alert-top">
+                                <div class="alert-type">
+                                    <i class="fa-solid fa-temperature-high"></i>
+                                    Heatwave Alert
+                                </div>
+                                <span class="alert-level level-high">HIGH</span>
+                            </div>
+                            <div class="alert-body">
+                                <h3 class="alert-title">Severe heatwave — Delhi NCR region</h3>
+                                <p class="alert-desc">Temperature above 42°C until Friday. High risk for elderly, children and outdoor workers. Avoid going outside between 11am–5pm.</p>
+                                <div class="alert-tags">
+                                    <span class="tag">Drink water hourly</span>
+                                    <span class="tag">Stay indoors 11am–5pm</span>
+                                    <span class="tag">Watch for heatstroke</span>
+                                </div>
+                                <a href="action.html" class="alert-action-btn">View My Action Plan →</a>
+                            </div>
+                        </div>
+                        <div class="alert-card alert-warning">
+                            <div class="alert-top">
+                                <div class="alert-type">
+                                    <i class="fa-solid fa-wind"></i>
+                                    Air Quality Alert
+                                </div>
+                                <span class="alert-level level-moderate">MODERATE</span>
+                            </div>
+                            <div class="alert-body">
+                                <h3 class="alert-title">Poor air quality — AQI 168</h3>
+                                <p class="alert-desc">Unhealthy for sensitive groups. Wear a mask if going outside. Keep windows closed during afternoon hours.</p>
+                                <div class="alert-tags">
+                                    <span class="tag tag-warning">Wear N95 mask</span>
+                                    <span class="tag tag-warning">Close windows 12–4pm</span>
+                                </div>
+                                <a href="action.html" class="alert-action-btn">View My Action Plan →</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-right">
+                    <div class="weather-card">
+                        <p class="weather-location"><i class="fa-solid fa-location-dot"></i> New Delhi, India</p>
+                        <h2 class="weather-temp">42°C</h2>
+                        <p class="weather-desc">Severe Heatwave · Feels like 47°C</p>
+                        <div class="weather-stats">
+                            <div class="weather-stat">
+                                <p class="weather-stat-label">Wind</p>
+                                <p class="weather-stat-val">12 km/h</p>
+                            </div>
+                            <div class="weather-stat">
+                                <p class="weather-stat-label">UV Index</p>
+                                <p class="weather-stat-val">11</p>
+                            </div>
+                            <div class="weather-stat">
+                                <p class="weather-stat-label">Sunrise</p>
+                                <p class="weather-stat-val">5:44am</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="safety-card">
+                        <h3 class="safety-title">Your Safety Status</h3>
+                        <div class="safety-item">
+                            <span class="safety-dot dot-red"></span>
+                            <p>Heat risk — HIGH for asthma patients</p>
+                        </div>
+                        <div class="safety-item">
+                            <span class="safety-dot dot-amber"></span>
+                            <p>Air quality — moderate concern</p>
+                        </div>
+                        <div class="safety-item">
+                            <span class="safety-dot dot-green"></span>
+                            <p>No flood or earthquake risk</p>
+                        </div>
+                        <div class="safety-item">
+                            <span class="safety-dot dot-green"></span>
+                            <p>No cyclone risk in your region</p>
+                        </div>
+                    </div>
+                    <div class="history-card">
+                        <div class="section-header">
+                            <h3 class="section-title">Recent Alerts</h3>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-icon icon-red"><i class="fa-solid fa-temperature-high"></i></div>
+                            <div class="history-info">
+                                <p class="history-name">Heatwave — High</p>
+                                <p class="history-time">Today, 9:00am</p>
+                            </div>
+                            <span class="history-badge badge-red">Active</span>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-icon icon-amber"><i class="fa-solid fa-wind"></i></div>
+                            <div class="history-info">
+                                <p class="history-name">Air Quality — Moderate</p>
+                                <p class="history-time">Today, 7:30am</p>
+                            </div>
+                            <span class="history-badge badge-amber">Active</span>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-icon icon-blue"><i class="fa-solid fa-cloud-rain"></i></div>
+                            <div class="history-info">
+                                <p class="history-name">Rain Advisory</p>
+                                <p class="history-time">Yesterday, 6:00pm</p>
+                            </div>
+                            <span class="history-badge badge-blue">Resolved</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+</body>
+<script src="js/main.js"></script>
+</html>
