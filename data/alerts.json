@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "source": "DeshSafe Mock Data — replace with real IMD/NDMA API",
+    "last_updated": "2026-05-16T09:00:00+05:30",
+    "location": "New Delhi, India"
+  },
+  "active_alerts": [
+    {
+      "id": "alert-001",
+      "type": "heatwave",
+      "title": "Severe Heatwave — Delhi NCR",
+      "description": "Temperature above 42°C expected until Friday. High risk for elderly, children, and outdoor workers.",
+      "severity": "high",
+      "location": "Delhi NCR",
+      "issued_at": "2026-05-16T09:00:00+05:30",
+      "expires_at": "2026-05-19T18:00:00+05:30",
+      "source": "IMD",
+      "tags": ["Drink water hourly", "Stay indoors 11am–5pm", "Watch for heatstroke"],
+      "action_plan_url": "action.html"
+    },
+    {
+      "id": "alert-002",
+      "type": "air_quality",
+      "title": "Poor Air Quality — AQI 168",
+      "description": "Unhealthy for sensitive groups. Wear a mask if going outside. Keep windows closed during afternoon hours.",
+      "severity": "moderate",
+      "location": "Delhi NCR",
+      "issued_at": "2026-05-16T07:30:00+05:30",
+      "expires_at": "2026-05-17T07:30:00+05:30",
+      "source": "CPCB",
+      "tags": ["Wear N95 mask", "Close windows 12–4pm"],
+      "action_plan_url": "action.html"
+    }
+  ],
+  "weather": {
+    "temperature_c": 42,
+    "feels_like_c": 47,
+    "humidity_percent": 28,
+    "aqi": 168,
+    "wind_kmh": 12,
+    "uv_index": 11,
+    "condition": "Severe Heatwave",
+    "sunrise": "05:44",
+    "sunset": "19:12"
+  },
+  "community_reports": [
+    {
+      "id": "rep-001",
+      "type": "flood",
+      "title": "Waterlogging — Minto Road underpass",
+      "location": "Central Delhi",
+      "reported_at": "2026-05-16T08:35:00+05:30",
+      "severity": "high",
+      "status": "confirmed",
+      "verified": true
+    },
+    {
+      "id": "rep-002",
+      "type": "other",
+      "title": "Power outage — Sector 15 Rohini",
+      "location": "North Delhi",
+      "reported_at": "2026-05-16T08:00:00+05:30",
+      "severity": "moderate",
+      "status": "verifying",
+      "verified": false
+    },
+    {
+      "id": "rep-003",
+      "type": "other",
+      "title": "Tree fallen on road — Golf Links",
+      "location": "South Delhi",
+      "reported_at": "2026-05-16T06:00:00+05:30",
+      "severity": "low",
+      "status": "resolved",
+      "verified": true
+    }
+  ],
+  "nearby_resources": [
+    {
+      "name": "Connaught Place Shelter",
+      "type": "cooling_center",
+      "distance_km": 1.2,
+      "address": "Connaught Place, New Delhi"
+    },
+    {
+      "name": "Ram Manohar Lohia Hospital",
+      "type": "hospital",
+      "distance_km": 3.4,
+      "address": "Baba Kharak Singh Marg, New Delhi"
+    },
+    {
+      "name": "Select City Walk Mall",
+      "type": "cooling_center",
+      "distance_km": 4.1,
+      "address": "Saket, New Delhi"
+    }
+  ]
+}

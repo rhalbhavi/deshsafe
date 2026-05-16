@@ -1,0 +1,29 @@
+{
+  "name": "deshsafe",
+  "version": "0.1.0",
+  "description": "A citizen-powered disaster and crisis reporting web platform for India.",
+  "author": "Anushka Pandey <anushkapandey8029@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/Anushka-045/deshsafe#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Anushka-045/deshsafe.git"
+  },
+  "scripts": {
+    "start": "npx live-server frontend --port=3000 --open=index.html",
+    "dev": "npx live-server frontend --port=3000 --open=index.html",
+    "lint": "echo \"No linter configured yet — good first issue!\""
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "keywords": [
+    "disaster",
+    "crisis",
+    "india",
+    "safety",
+    "alerts",
+    "open-source",
+    "ssoc"
+  ]
+}
