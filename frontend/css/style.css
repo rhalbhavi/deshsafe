@@ -576,3 +576,83 @@ body {
     opacity: 1;
     transform: translateY(0);
 }
+
+/*Dark mode*/
+
+[data-theme="dark"] {
+    --bg-page:    #0F0F1A;
+    --bg-card:    #1A1A2E;
+    --border:     rgba(255,255,255,0.08);
+    --border-red: rgba(255,107,107,0.22);
+
+    --text-dark:  #F0EEFF;
+    --text-mid:   #A9A3C4;
+    --text-muted: #7B748F;
+    --text-faint: #4E4A62;
+
+    --shadow-sm:  0 2px 8px rgba(0,0,0,0.30);
+    --shadow-md:  0 4px 20px rgba(0,0,0,0.45);
+}
+
+/* Navbar */
+[data-theme="dark"] .navbar {
+    background: rgba(15,15,26,0.92);
+    border-bottom-color: rgba(255,255,255,0.07);
+}
+
+/* Features section */
+[data-theme="dark"] .features {
+    background: linear-gradient(180deg, #0F0F1A 0%, #13131F 100%);
+}
+
+/* Forms */
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea {
+    background: #12121E;
+    color: var(--text-dark);
+    border-color: rgba(255,255,255,0.10);
+}
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-textarea:focus {
+    background: #1A1A2E;
+    border-color: var(--red);
+}
+[data-theme="dark"] .form-input::placeholder,
+[data-theme="dark"] .form-textarea::placeholder {
+    color: var(--text-faint);
+}
+
+/* Select option (browser-native) */
+[data-theme="dark"] .form-select option {
+    background: #1A1A2E;
+    color: var(--text-dark);
+}
+
+/* Dark mode toggle button */
+.dark-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-mid);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: all var(--transition);
+    flex-shrink: 0;
+}
+.dark-toggle:hover {
+    background: rgba(255,107,107,0.10);
+    border-color: rgba(255,107,107,0.30);
+    color: var(--red);
+    transform: scale(1.08);
+}
+.dark-toggle .icon-sun  { display: none; }
+.dark-toggle .icon-moon { display: block; }
+[data-theme="dark"] .dark-toggle .icon-sun  { display: block; }
+[data-theme="dark"] .dark-toggle .icon-moon { display: none; }
