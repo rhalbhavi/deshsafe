@@ -1,8 +1,12 @@
-// DeshSafe — report.js
+// ═══════════════════════════════════════════
+//  DeshSafe — report.js
+// ═══════════════════════════════════════════
+
 let selectedType = 'Heatwave';
 let selectedSeverity = 'medium';
 let photoBase64 = null;
 
+// Autofill current time on load
 document.addEventListener('DOMContentLoaded', () => {
     const timeInput = document.getElementById('incident-time');
     if (timeInput) {
@@ -13,9 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ── SOS Modal ──
 function openSOS() {
     const overlay = document.getElementById('sos-overlay');
     if (overlay) overlay.classList.add('open');
+    // Update email link with current time
+    const emailBtn = document.getElementById('sos-email-btn');
+    if (emailBtn) {
+        const now = new Date().toLocaleString('en-IN');
+        emailBtn.href = emailBtn.href.replace(/Time: .*$/, 'Time: ' + encodeURIComponent(now));
+    }
 }
 
 function closeSOS(event) {
@@ -26,6 +37,7 @@ function closeSOS(event) {
     }
 }
 
+// ── Incident Type Selection ──
 function selectType(element) {
     document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
     element.classList.add('selected');
@@ -33,12 +45,14 @@ function selectType(element) {
     if (nameEl) selectedType = nameEl.textContent.trim();
 }
 
+// ── Severity Selection ──
 function selectSeverity(level, element) {
     document.querySelectorAll('.severity-btn').forEach(btn => btn.classList.remove('selected'));
     element.classList.add('selected');
     selectedSeverity = level;
 }
 
+// ── Photo Preview ──
 function previewPhoto(event) {
     const input = event.target;
     const previewWrap = document.getElementById('preview-wrap');
@@ -55,16 +69,17 @@ function previewPhoto(event) {
     }
 }
 
+// ── Geolocation ──
 function detectLocation() {
     const status = document.getElementById('gps-status');
     const locationInput = document.getElementById('incident-location');
 
     if (!navigator.geolocation) {
-        status.textContent = 'Geolocation is not supported by your browser.';
+        if (status) status.textContent = 'Geolocation is not supported by your browser.';
         return;
     }
 
-    status.textContent = 'Detecting your location...';
+    if (status) status.textContent = 'Detecting your location...';
 
     navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -76,29 +91,118 @@ function detectLocation() {
                 const data = await res.json();
                 const address = data.display_name || `${latitude}, ${longitude}`;
                 locationInput.value = address;
-                status.textContent = '✅ Location detected.';
+                if (status) status.textContent = '✅ Location detected.';
+                // Clear error style since value is entered
+                clearFieldError(locationInput);
             } catch {
                 locationInput.value = `${latitude}, ${longitude}`;
-                status.textContent = '✅ Coordinates captured (reverse geocode failed).';
+                if (status) status.textContent = '✅ Coordinates captured (reverse geocode failed).';
+                clearFieldError(locationInput);
             }
         },
         (err) => {
-            status.textContent = `❌ Could not get location: ${err.message}`;
+            if (status) status.textContent = `❌ Could not get location: ${err.message}`;
         }
     );
 }
 
-function submitReport() {
-    const title = document.getElementById('incident-title')?.value.trim();
-    const desc = document.getElementById('incident-desc')?.value.trim();
-    const location = document.getElementById('incident-location')?.value.trim();
-    const time = document.getElementById('incident-time')?.value;
+// ── Validation Helpers ──
 
-    if (!title || !desc || !location || !time) {
-        alert('Please fill in all required fields (Title, Description, Location, and Time).');
+/**
+ * Show an inline error message below a field and highlight its border.
+ * @param {HTMLElement} field - The input/textarea element
+ * @param {string} message - The error message to display
+ */
+function showFieldError(field, message) {
+    if (!field) return;
+    // Add error border
+    field.classList.add('field-error');
+
+    // Avoid duplicate error messages
+    const parent = field.closest('.form-group');
+    if (parent && !parent.querySelector('.field-error-msg')) {
+        const errorEl = document.createElement('span');
+        errorEl.className = 'field-error-msg';
+        errorEl.textContent = message;
+        parent.appendChild(errorEl);
+    }
+}
+
+/**
+ * Clear the error state from a field.
+ * @param {HTMLElement} field - The input/textarea element
+ */
+function clearFieldError(field) {
+    if (!field) return;
+    field.classList.remove('field-error');
+    const parent = field.closest('.form-group');
+    if (parent) {
+        const errorMsg = parent.querySelector('.field-error-msg');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
+    }
+}
+
+// Clear error styling on input so the user gets immediate feedback
+['incident-title', 'incident-desc', 'incident-location', 'incident-time'].forEach(id => {
+    const field = document.getElementById(id);
+    if (field) {
+        field.addEventListener('input', () => {
+            if (field.value.trim()) {
+                clearFieldError(field);
+            }
+        });
+    }
+});
+
+// ── Submit Report ──
+function submitReport() {
+    const titleEl = document.getElementById('incident-title');
+    const descEl = document.getElementById('incident-desc');
+    const locationEl = document.getElementById('incident-location');
+    const timeEl = document.getElementById('incident-time');
+
+    const title = titleEl?.value.trim();
+    const desc = descEl?.value.trim();
+    const location = locationEl?.value.trim();
+    const time = timeEl?.value;
+
+    // Clear all previous errors first
+    [titleEl, descEl, locationEl, timeEl].forEach(f => {
+        clearFieldError(f);
+    });
+
+    let isValid = true;
+
+    if (!title) {
+        showFieldError(titleEl, 'Please enter a brief title');
+        isValid = false;
+    }
+    if (!desc) {
+        showFieldError(descEl, 'Please describe the incident');
+        isValid = false;
+    }
+    if (!location) {
+        showFieldError(locationEl, 'Please enter the location');
+        isValid = false;
+    }
+    if (!time) {
+        showFieldError(timeEl, 'Please select the time of incident');
+        isValid = false;
+    }
+
+    if (!isValid) {
+        // Scroll to the first error field
+        const firstError = document.querySelector('.field-error');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
         return;
     }
 
+    // All fields valid — prepare report object
     const randomId = 'DS-' + Math.floor(1000 + Math.random() * 9000);
 
     const report = {
@@ -132,4 +236,9 @@ function submitReport() {
 
     const successScreen = document.getElementById('success-screen');
     if (successScreen) successScreen.classList.add('show');
+
+    // Scroll to success screen
+    if (successScreen) {
+        successScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
