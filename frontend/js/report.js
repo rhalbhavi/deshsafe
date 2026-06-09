@@ -1,9 +1,8 @@
 // DeshSafe — report.js
-
 let selectedType = 'Heatwave';
 let selectedSeverity = 'medium';
+let photoBase64 = null;
 
-// Set current time as the default for the Time of Incident input
 document.addEventListener('DOMContentLoaded', () => {
     const timeInput = document.getElementById('incident-time');
     if (timeInput) {
@@ -16,38 +15,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function openSOS() {
     const overlay = document.getElementById('sos-overlay');
-    if (overlay) {
-        overlay.classList.add('open');
-    }
+    if (overlay) overlay.classList.add('open');
 }
 
 function closeSOS(event) {
     const overlay = document.getElementById('sos-overlay');
     if (overlay) {
-        // Close if called directly (e.g. Cancel button) or if clicking the backdrop itself
-        if (event && event.target !== overlay) {
-            return;
-        }
+        if (event && event.target !== overlay) return;
         overlay.classList.remove('open');
     }
 }
 
 function selectType(element) {
-    document.querySelectorAll('.type-card').forEach(card => {
-        card.classList.remove('selected');
-    });
+    document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
     element.classList.add('selected');
-    
     const nameEl = element.querySelector('.type-name');
-    if (nameEl) {
-        selectedType = nameEl.textContent.trim();
-    }
+    if (nameEl) selectedType = nameEl.textContent.trim();
 }
 
 function selectSeverity(level, element) {
-    document.querySelectorAll('.severity-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
+    document.querySelectorAll('.severity-btn').forEach(btn => btn.classList.remove('selected'));
     element.classList.add('selected');
     selectedSeverity = level;
 }
@@ -56,15 +43,49 @@ function previewPhoto(event) {
     const input = event.target;
     const previewWrap = document.getElementById('preview-wrap');
     const previewImg = document.getElementById('preview-img');
-    
+
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            if (previewImg) previewImg.src = e.target.result;
+        reader.onload = function (e) {
+            photoBase64 = e.target.result;
+            if (previewImg) previewImg.src = photoBase64;
             if (previewWrap) previewWrap.style.display = 'block';
         };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+function detectLocation() {
+    const status = document.getElementById('gps-status');
+    const locationInput = document.getElementById('incident-location');
+
+    if (!navigator.geolocation) {
+        status.textContent = 'Geolocation is not supported by your browser.';
+        return;
+    }
+
+    status.textContent = 'Detecting your location...';
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+                );
+                const data = await res.json();
+                const address = data.display_name || `${latitude}, ${longitude}`;
+                locationInput.value = address;
+                status.textContent = '✅ Location detected.';
+            } catch {
+                locationInput.value = `${latitude}, ${longitude}`;
+                status.textContent = '✅ Coordinates captured (reverse geocode failed).';
+            }
+        },
+        (err) => {
+            status.textContent = `❌ Could not get location: ${err.message}`;
+        }
+    );
 }
 
 function submitReport() {
@@ -74,37 +95,41 @@ function submitReport() {
     const time = document.getElementById('incident-time')?.value;
 
     if (!title || !desc || !location || !time) {
-        alert('Please fill in all the required fields (Title, Description, Location, and Time).');
+        alert('Please fill in all required fields (Title, Description, Location, and Time).');
         return;
     }
 
-    // Generate a random incident ID
     const randomId = 'DS-' + Math.floor(1000 + Math.random() * 9000);
-    const reportIdEl = document.getElementById('report-id');
-    if (reportIdEl) {
-        reportIdEl.textContent = `Report ID: #${randomId}`;
-    }
 
-    // Hide the form container
-    const formContainer = document.getElementById('report-form');
-    if (formContainer) {
-        formContainer.style.display = 'none';
-    }
-
-    // Show success screen
-    const successScreen = document.getElementById('success-screen');
-    if (successScreen) {
-        successScreen.classList.add('show');
-    }
-
-    // Optional: Log submitted report details locally
-    console.log('Incident Report Submitted:', {
+    const report = {
         id: randomId,
         type: selectedType,
         severity: selectedSeverity,
         title,
-        desc,
+        description: desc,
         location,
-        time
-    });
+        time,
+        photo: photoBase64 || null,
+        submittedAt: new Date().toISOString()
+    };
+
+    // Save to localStorage
+    try {
+        const existing = JSON.parse(localStorage.getItem('deshsafe_reports') || '[]');
+        existing.push(report);
+        localStorage.setItem('deshsafe_reports', JSON.stringify(existing));
+    } catch (e) {
+        console.error('localStorage save failed:', e);
+    }
+
+    // Update report ID display
+    const reportIdEl = document.getElementById('report-id');
+    if (reportIdEl) reportIdEl.textContent = `Report ID: #${randomId}`;
+
+    // Hide form, show success
+    const formContainer = document.getElementById('report-form');
+    if (formContainer) formContainer.style.display = 'none';
+
+    const successScreen = document.getElementById('success-screen');
+    if (successScreen) successScreen.classList.add('show');
 }
