@@ -64,3 +64,27 @@ steps.forEach(function(step) {
         updateProgress();
     });
 });
+
+/// ── Dark Mode ──
+(function () {
+    var STORAGE_KEY = 'deshsafe-theme';
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(STORAGE_KEY, theme);
+    }
+
+    function getPreferred() {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return saved;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    // Apply immediately (before paint) to avoid flash
+    applyTheme(getPreferred());
+
+    window.toggleDarkMode = function () {
+        var current = document.documentElement.getAttribute('data-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    };
+})();

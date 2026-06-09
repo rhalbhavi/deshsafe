@@ -6,6 +6,7 @@
     <title>DeshSafe — Know the threat. Stay safe.</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>!function(){var t=localStorage.getItem("deshsafe-theme");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}();</script>
 </head>
 <body>
 
@@ -17,6 +18,10 @@
                 <li><a href="#">About</a></li>
             </ul>
             <a href="dashboard.html" class="nav-btn">Get Started</a>
+            <button class="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                <i class="fa-solid fa-sun icon-sun"></i>
+                <i class="fa-solid fa-moon icon-moon"></i>
+            </button>
         </div>
     </nav>
 

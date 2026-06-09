@@ -2,53 +2,108 @@
 //  DeshSafe — report.js
 // ═══════════════════════════════════════════
 
-// ── Incident Type Selection ──
-function selectType(card) {
-    document.querySelectorAll('.type-card').forEach(function(c) {
-        c.classList.remove('selected');
-    });
-    card.classList.add('selected');
-}
+let selectedType = 'Heatwave';
+let selectedSeverity = 'medium';
+let photoBase64 = null;
 
-// ── Severity Selection ──
-function selectSeverity(level, btn) {
-    document.querySelectorAll('.severity-btn').forEach(function(b) {
-        b.classList.remove('selected');
-    });
-    btn.classList.add('selected');
-}
-
-// ── Photo Preview ──
-function previewPhoto(event) {
-    var file = event.target.files[0];
-    if (file) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var img = document.getElementById('preview-img');
-            img.src = e.target.result;
-            document.getElementById('preview-wrap').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+// Autofill current time on load
+document.addEventListener('DOMContentLoaded', () => {
+    const timeInput = document.getElementById('incident-time');
+    if (timeInput) {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hours}:${minutes}`;
     }
-}
+});
 
 // ── SOS Modal ──
 function openSOS() {
-    document.getElementById('sos-overlay').classList.add('open');
+    const overlay = document.getElementById('sos-overlay');
+    if (overlay) overlay.classList.add('open');
     // Update email link with current time
-    var emailBtn = document.getElementById('sos-email-btn');
+    const emailBtn = document.getElementById('sos-email-btn');
     if (emailBtn) {
-        var now = new Date().toLocaleString('en-IN');
+        const now = new Date().toLocaleString('en-IN');
         emailBtn.href = emailBtn.href.replace(/Time: .*$/, 'Time: ' + encodeURIComponent(now));
     }
 }
 
 function closeSOS(event) {
-    // If called from overlay click, only close if clicking the overlay itself
-    if (event && event.target !== document.getElementById('sos-overlay')) {
+    const overlay = document.getElementById('sos-overlay');
+    if (overlay) {
+        if (event && event.target !== overlay) return;
+        overlay.classList.remove('open');
+    }
+}
+
+// ── Incident Type Selection ──
+function selectType(element) {
+    document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
+    const nameEl = element.querySelector('.type-name');
+    if (nameEl) selectedType = nameEl.textContent.trim();
+}
+
+// ── Severity Selection ──
+function selectSeverity(level, element) {
+    document.querySelectorAll('.severity-btn').forEach(btn => btn.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedSeverity = level;
+}
+
+// ── Photo Preview ──
+function previewPhoto(event) {
+    const input = event.target;
+    const previewWrap = document.getElementById('preview-wrap');
+    const previewImg = document.getElementById('preview-img');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            photoBase64 = e.target.result;
+            if (previewImg) previewImg.src = photoBase64;
+            if (previewWrap) previewWrap.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ── Geolocation ──
+function detectLocation() {
+    const status = document.getElementById('gps-status');
+    const locationInput = document.getElementById('incident-location');
+
+    if (!navigator.geolocation) {
+        if (status) status.textContent = 'Geolocation is not supported by your browser.';
         return;
     }
-    document.getElementById('sos-overlay').classList.remove('open');
+
+    if (status) status.textContent = 'Detecting your location...';
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+                );
+                const data = await res.json();
+                const address = data.display_name || `${latitude}, ${longitude}`;
+                locationInput.value = address;
+                if (status) status.textContent = '✅ Location detected.';
+                // Clear error style since value is entered
+                clearFieldError(locationInput);
+            } catch {
+                locationInput.value = `${latitude}, ${longitude}`;
+                if (status) status.textContent = '✅ Coordinates captured (reverse geocode failed).';
+                clearFieldError(locationInput);
+            }
+        },
+        (err) => {
+            if (status) status.textContent = `❌ Could not get location: ${err.message}`;
+        }
+    );
 }
 
 // ── Validation Helpers ──
@@ -59,13 +114,14 @@ function closeSOS(event) {
  * @param {string} message - The error message to display
  */
 function showFieldError(field, message) {
+    if (!field) return;
     // Add error border
     field.classList.add('field-error');
 
     // Avoid duplicate error messages
-    var parent = field.closest('.form-group');
+    const parent = field.closest('.form-group');
     if (parent && !parent.querySelector('.field-error-msg')) {
-        var errorEl = document.createElement('span');
+        const errorEl = document.createElement('span');
         errorEl.className = 'field-error-msg';
         errorEl.textContent = message;
         parent.appendChild(errorEl);
@@ -77,10 +133,11 @@ function showFieldError(field, message) {
  * @param {HTMLElement} field - The input/textarea element
  */
 function clearFieldError(field) {
+    if (!field) return;
     field.classList.remove('field-error');
-    var parent = field.closest('.form-group');
+    const parent = field.closest('.form-group');
     if (parent) {
-        var errorMsg = parent.querySelector('.field-error-msg');
+        const errorMsg = parent.querySelector('.field-error-msg');
         if (errorMsg) {
             errorMsg.remove();
         }
@@ -88,10 +145,10 @@ function clearFieldError(field) {
 }
 
 // Clear error styling on input so the user gets immediate feedback
-['incident-title', 'incident-desc', 'incident-location', 'incident-time'].forEach(function(id) {
-    var field = document.getElementById(id);
+['incident-title', 'incident-desc', 'incident-location', 'incident-time'].forEach(id => {
+    const field = document.getElementById(id);
     if (field) {
-        field.addEventListener('input', function() {
+        field.addEventListener('input', () => {
             if (field.value.trim()) {
                 clearFieldError(field);
             }
@@ -101,38 +158,43 @@ function clearFieldError(field) {
 
 // ── Submit Report ──
 function submitReport() {
-    var title    = document.getElementById('incident-title');
-    var desc     = document.getElementById('incident-desc');
-    var location = document.getElementById('incident-location');
-    var time     = document.getElementById('incident-time');
+    const titleEl = document.getElementById('incident-title');
+    const descEl = document.getElementById('incident-desc');
+    const locationEl = document.getElementById('incident-location');
+    const timeEl = document.getElementById('incident-time');
+
+    const title = titleEl?.value.trim();
+    const desc = descEl?.value.trim();
+    const location = locationEl?.value.trim();
+    const time = timeEl?.value;
 
     // Clear all previous errors first
-    [title, desc, location, time].forEach(function(f) {
+    [titleEl, descEl, locationEl, timeEl].forEach(f => {
         clearFieldError(f);
     });
 
-    var isValid = true;
+    let isValid = true;
 
-    if (!title.value.trim()) {
-        showFieldError(title, 'Please enter a brief title');
+    if (!title) {
+        showFieldError(titleEl, 'Please enter a brief title');
         isValid = false;
     }
-    if (!desc.value.trim()) {
-        showFieldError(desc, 'Please describe the incident');
+    if (!desc) {
+        showFieldError(descEl, 'Please describe the incident');
         isValid = false;
     }
-    if (!location.value.trim()) {
-        showFieldError(location, 'Please enter the location');
+    if (!location) {
+        showFieldError(locationEl, 'Please enter the location');
         isValid = false;
     }
-    if (!time.value) {
-        showFieldError(time, 'Please select the time of incident');
+    if (!time) {
+        showFieldError(timeEl, 'Please select the time of incident');
         isValid = false;
     }
 
     if (!isValid) {
         // Scroll to the first error field
-        var firstError = document.querySelector('.field-error');
+        const firstError = document.querySelector('.field-error');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstError.focus();
@@ -140,12 +202,43 @@ function submitReport() {
         return;
     }
 
-    // All fields valid — show success screen
-    var reportId = 'DS-' + String(Math.floor(1000 + Math.random() * 9000));
-    document.getElementById('report-id').textContent = 'Report ID: #' + reportId;
-    document.getElementById('report-form').style.display = 'none';
-    document.getElementById('success-screen').classList.add('show');
+    // All fields valid — prepare report object
+    const randomId = 'DS-' + Math.floor(1000 + Math.random() * 9000);
+
+    const report = {
+        id: randomId,
+        type: selectedType,
+        severity: selectedSeverity,
+        title,
+        description: desc,
+        location,
+        time,
+        photo: photoBase64 || null,
+        submittedAt: new Date().toISOString()
+    };
+
+    // Save to localStorage
+    try {
+        const existing = JSON.parse(localStorage.getItem('deshsafe_reports') || '[]');
+        existing.push(report);
+        localStorage.setItem('deshsafe_reports', JSON.stringify(existing));
+    } catch (e) {
+        console.error('localStorage save failed:', e);
+    }
+
+    // Update report ID display
+    const reportIdEl = document.getElementById('report-id');
+    if (reportIdEl) reportIdEl.textContent = `Report ID: #${randomId}`;
+
+    // Hide form, show success
+    const formContainer = document.getElementById('report-form');
+    if (formContainer) formContainer.style.display = 'none';
+
+    const successScreen = document.getElementById('success-screen');
+    if (successScreen) successScreen.classList.add('show');
 
     // Scroll to success screen
-    document.getElementById('success-screen').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (successScreen) {
+        successScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
