@@ -1,1 +1,33 @@
+name: Auto Label PRs
 
+on:
+  pull_request_target:
+    types: [opened, edited]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title.toLowerCase();
+            const body = (context.payload.pull_request.body || '').toLowerCase();
+            const labels = [];
+
+            if (title.includes('fix') || title.includes('bug')) labels.push('bug');
+            if (title.includes('feat') || title.includes('feature') || title.includes('add')) labels.push('enhancement');
+            if (title.includes('docs') || title.includes('readme')) labels.push('documentation');
+            if (title.includes('ui') || title.includes('style') || title.includes('css') || title.includes('dark mode')) labels.push('UI');
+            if (title.includes('refactor')) labels.push('refactor');
+
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels
+              });
+            }
