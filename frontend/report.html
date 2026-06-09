@@ -147,7 +147,13 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Location / Area</label>
-                            <input class="form-input" type="text" placeholder="e.g. Lajpat Nagar, Delhi" id="incident-location">
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <input class="form-input" type="text" placeholder="e.g. Lajpat Nagar, Delhi" id="incident-location" style="flex:1;">
+                                <button type="button" onclick="detectLocation()" style="white-space:nowrap; padding:10px 14px; background:#2563eb; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px;">
+                                    <i class="fa-solid fa-location-crosshairs"></i> GPS
+                                </button>
+                            </div>
+                            <p id="gps-status" style="font-size:12px; color:#6b7280; margin-top:4px;"></p>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Time of Incident</label>
