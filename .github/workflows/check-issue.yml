@@ -1,0 +1,30 @@
+name: Check Linked Issue
+
+on:
+  pull_request_target:
+    types: [opened, edited]
+
+jobs:
+  check-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const issuePattern = /(closes|fixes|resolves|related to|ref)\s*#\d+/i;
+
+            if (!issuePattern.test(body)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: `⚠️ **No linked issue found!**\n\nThis PR cannot be reviewed until a related issue is linked.\n\nPlease:\n1. [Create an issue](https://github.com/${context.repo.owner}/${context.repo.repo}/issues/new/choose) if one doesn't exist\n2. Add \`Closes #issue_number\` in your PR description\n\nThis is required for SSoC contributions. Thanks! 🙏`
+              });
+
+              core.setFailed('PR must reference a linked issue.');
+            } else {
+              console.log('✅ Linked issue found.');
+            }
