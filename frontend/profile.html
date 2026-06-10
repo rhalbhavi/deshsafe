@@ -13,7 +13,7 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <div class="nav-brand">🛡️ DeshSafe</div>
+            <a href="dashboard.html" class="nav-brand" style="text-decoration: none;">🛡️ DeshSafe</a>
             <div class="nav-center">
                 <span class="nav-location">
                     <i class="fa-solid fa-location-dot"></i>
@@ -21,12 +21,13 @@
                 </span>
             </div>
             <div class="nav-right">
+                <a href="report.html" class="nav-alert-badge" style="background: rgba(255,107,107,0.08); color: var(--red); border-color: var(--border-red); text-decoration: none; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-triangle-exclamation"></i> Report Incident</a>
                 <span class="nav-alert-badge">⚠️ 2 Alerts</span>
                 <button class="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
                     <i class="fa-solid fa-sun icon-sun"></i>
                     <i class="fa-solid fa-moon icon-moon"></i>
                 </button>
-                <div class="nav-avatar">AR</div>
+                <a href="profile.html" class="nav-avatar" title="My Profile">AR</a>
             </div>
         </div>
     </nav>
@@ -34,9 +35,14 @@
     <main class="profile-body">
         <div class="profile-container">
 
-            <div class="page-header">
-                <h1>My Profile</h1>
-                <p>Your personal details help us send the right alerts and action plans for you.</p>
+            <div class="page-header" style="display: flex; align-items: center; gap: 16px;">
+                <a class="back-btn" href="dashboard.html" aria-label="Back to dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 style="margin-bottom: 2px;">My Profile</h1>
+                    <p>Your personal details help us send the right alerts and action plans for you.</p>
+                </div>
             </div>
 
             <div class="profile-layout">

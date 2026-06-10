@@ -656,3 +656,38 @@ body {
 .dark-toggle .icon-moon { display: block; }
 [data-theme="dark"] .dark-toggle .icon-sun  { display: block; }
 [data-theme="dark"] .dark-toggle .icon-moon { display: none; }
+
+/* ── Global Back Button ── */
+.back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--red);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all var(--transition);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+.back-btn:hover {
+    background: var(--red);
+    color: #fff;
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-red);
+    border-color: var(--red);
+}
+
+.btn-report-incident {
+    transition: all var(--transition);
+}
+.btn-report-incident:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-red-lg) !important;
+    filter: brightness(1.05);
+}
+
