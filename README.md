@@ -10,7 +10,7 @@
 **A citizen-powered disaster and crisis reporting web platform for India.**  
 Report floods, earthquakes, accidents, and emergencies in real time — so help reaches faster.
 
-[🚀 Live Demo](#) · [🐛 Report a Bug](../../issues/new?template=bug_report.md) · [✨ Request a Feature](../../issues/new?template=feature_request.md)
+[🚀 Live Demo](https://deshsafe.netlify.app/) · [🐛 Report a Bug](../../issues/new?template=bug_report.md) · [✨ Request a Feature](../../issues/new?template=feature_request.md)
 
 </div>
 
