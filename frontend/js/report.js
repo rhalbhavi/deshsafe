@@ -217,14 +217,8 @@ function submitReport() {
         submittedAt: new Date().toISOString()
     };
 
-    // Save to localStorage
-    try {
-        const existing = JSON.parse(localStorage.getItem('deshsafe_reports') || '[]');
-        existing.push(report);
-        localStorage.setItem('deshsafe_reports', JSON.stringify(existing));
-    } catch (e) {
-        console.error('localStorage save failed:', e);
-    }
+    // Save via central manager
+    window.DeshSafe.saveReport(report);
 
     // Update report ID display
     const reportIdEl = document.getElementById('report-id');
