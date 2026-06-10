@@ -30,13 +30,12 @@ function loadProfile() {
         } else {
             tag.classList.remove('active');
         }
-            }
-        });
+    });
 
-        // Set alert preference checkboxes
-        const prefHeatwave = document.getElementById('pref-heatwave');
-        const prefFlood = document.getElementById('pref-flood');
-        const prefAqi = document.getElementById('pref-aqi');
+    // Set alert preference checkboxes
+    const prefHeatwave = document.getElementById('pref-heatwave');
+    const prefFlood = document.getElementById('pref-flood');
+    const prefAqi = document.getElementById('pref-aqi');
     const prefEarthquake = document.getElementById('pref-earthquake');
 
     if (prefHeatwave) prefHeatwave.checked = !!data.preferences?.heatwave;
