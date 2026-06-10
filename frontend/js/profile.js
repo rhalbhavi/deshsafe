@@ -4,15 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProfile();
 });
 
-// Helper function to get initials from a name
-function getInitials(name) {
-    if (!name) return 'DS';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) {
-        return parts[0].slice(0, 2).toUpperCase();
-    }
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 function loadProfile() {
     const savedData = localStorage.getItem('deshsafe_profile');

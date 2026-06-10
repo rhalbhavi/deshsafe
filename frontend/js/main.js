@@ -88,3 +88,78 @@ steps.forEach(function(step) {
         applyTheme(current === 'dark' ? 'light' : 'dark');
     };
 })();
+
+// Helper function to get initials from a name (shared globally)
+function getInitials(name) {
+    if (!name) return 'DS';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Global profile sync on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedData = localStorage.getItem('deshsafe_profile');
+    if (!savedData) return;
+
+    try {
+        const data = JSON.parse(savedData);
+
+        // Update nav-avatar initials everywhere
+        if (data.name) {
+            const initials = getInitials(data.name);
+            document.querySelectorAll('.nav-avatar').forEach(avatar => {
+                avatar.textContent = initials;
+            });
+
+            // Update greeting title on dashboard
+            const greetingTitle = document.querySelector('.greeting-title');
+            if (greetingTitle) {
+                const hr = new Date().getHours();
+                let timeOfDay = 'day';
+                if (hr < 12) timeOfDay = 'morning';
+                else if (hr < 17) timeOfDay = 'afternoon';
+                else timeOfDay = 'evening';
+                greetingTitle.innerHTML = `Good ${timeOfDay}, ${data.name.split(' ')[0]} 👋`;
+            }
+        }
+
+        // Update location indicator in navbar
+        if (data.location) {
+            const navLocation = document.querySelector('.nav-location');
+            if (navLocation) {
+                navLocation.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${data.location}`;
+            }
+        }
+
+        // Dynamic Action Plan personalization (action.html)
+        const profileCard = document.querySelector('.profile-card');
+        if (profileCard) {
+            // Update personalized details panel
+            const items = profileCard.querySelectorAll('.profile-item');
+            if (items.length >= 4) {
+                // 1. Name & Age
+                items[0].innerHTML = `<i class="fa-solid fa-user"></i> <span>${data.name || 'Anonymous'}, Age ${data.age || '—'}</span>`;
+                // 2. Conditions
+                const healthStr = data.healthTags && data.healthTags.length > 0 ? data.healthTags.join(', ') : 'No conditions';
+                items[1].innerHTML = `<i class="fa-solid fa-lungs"></i> <span>${healthStr} condition</span>`;
+                // 3. Family Size
+                items[2].innerHTML = `<i class="fa-solid fa-people-roof"></i> <span>Family of ${data.familySize || '—'} members</span>`;
+                // 4. Location
+                items[3].innerHTML = `<i class="fa-solid fa-location-dot"></i> <span>${data.location || 'Unknown'}</span>`;
+            }
+
+            // Update progress header steps subtitle
+            const stepsSub = document.querySelector('.steps-sub');
+            if (stepsSub) {
+                const healthPart = data.healthTags && data.healthTags.length > 0 ? `, ${data.healthTags.join(', ')} condition` : '';
+                stepsSub.textContent = `Based on your profile — Age ${data.age || '—'}${healthPart}, Family of ${data.familySize || '—'}`;
+            }
+        }
+
+    } catch (e) {
+        console.error('Error synchronizing profile data globally:', e);
+    }
+});
