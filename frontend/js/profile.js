@@ -6,66 +6,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function loadProfile() {
-    const savedData = localStorage.getItem('deshsafe_profile');
-    if (!savedData) return;
+    const data = window.DeshSafe.getProfile();
 
-    try {
-        const data = JSON.parse(savedData);
+    // Populate form inputs
+    const nameInput = document.getElementById('profile-name');
+    const ageInput = document.getElementById('profile-age');
+    const phoneInput = document.getElementById('profile-phone');
+    const familyInput = document.getElementById('profile-family');
+    const locationInput = document.getElementById('profile-location');
 
-        // Populate form inputs
-        const nameInput = document.getElementById('profile-name');
-        const ageInput = document.getElementById('profile-age');
-        const phoneInput = document.getElementById('profile-phone');
-        const familyInput = document.getElementById('profile-family');
-        const locationInput = document.getElementById('profile-location');
+    if (nameInput) nameInput.value = data.name || '';
+    if (ageInput) ageInput.value = data.age || '';
+    if (phoneInput) phoneInput.value = data.phone || '';
+    if (familyInput) familyInput.value = data.familySize || '';
+    if (locationInput) locationInput.value = data.location || '';
 
-        if (nameInput) nameInput.value = data.name || '';
-        if (ageInput) ageInput.value = data.age || '';
-        if (phoneInput) phoneInput.value = data.phone || '';
-        if (familyInput) familyInput.value = data.familySize || '';
-        if (locationInput) locationInput.value = data.location || '';
-
-        // Update identity card and avatar initials
-        const identityName = document.querySelector('.identity-name');
-        if (identityName) identityName.textContent = data.name || 'Anonymous';
-
-        const initials = getInitials(data.name);
-        const avatarRing = document.querySelector('.avatar-ring');
-        const navAvatar = document.querySelector('.nav-avatar');
-        if (avatarRing) avatarRing.textContent = initials;
-        if (navAvatar) navAvatar.textContent = initials;
-
-        // Update location indicator in navbar
-        const navLocation = document.querySelector('.nav-location');
-        if (navLocation) {
-            navLocation.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${data.location || 'Unknown'}`;
+    // Set health tags active states
+    const savedHealthTags = data.healthTags || [];
+    document.querySelectorAll('.health-tag').forEach(tag => {
+        const condition = tag.textContent.trim();
+        if (savedHealthTags.includes(condition)) {
+            tag.classList.add('active');
+        } else {
+            tag.classList.remove('active');
         }
+    });
 
-        // Set health tags active states
-        const savedHealthTags = data.healthTags || [];
-        document.querySelectorAll('.health-tag').forEach(tag => {
-            const condition = tag.textContent.trim();
-            if (savedHealthTags.includes(condition)) {
-                tag.classList.add('active');
-            } else {
-                tag.classList.remove('active');
-            }
-        });
+    // Set alert preference checkboxes
+    const prefHeatwave = document.getElementById('pref-heatwave');
+    const prefFlood = document.getElementById('pref-flood');
+    const prefAqi = document.getElementById('pref-aqi');
+    const prefEarthquake = document.getElementById('pref-earthquake');
 
-        // Set alert preference checkboxes
-        const prefHeatwave = document.getElementById('pref-heatwave');
-        const prefFlood = document.getElementById('pref-flood');
-        const prefAqi = document.getElementById('pref-aqi');
-        const prefEarthquake = document.getElementById('pref-earthquake');
-
-        if (prefHeatwave) prefHeatwave.checked = !!data.preferences?.heatwave;
-        if (prefFlood) prefFlood.checked = !!data.preferences?.flood;
-        if (prefAqi) prefAqi.checked = !!data.preferences?.aqi;
-        if (prefEarthquake) prefEarthquake.checked = !!data.preferences?.earthquake;
-
-    } catch (e) {
-        console.error('Error parsing profile data from localStorage:', e);
-    }
+    if (prefHeatwave) prefHeatwave.checked = !!data.preferences?.heatwave;
+    if (prefFlood) prefFlood.checked = !!data.preferences?.flood;
+    if (prefAqi) prefAqi.checked = !!data.preferences?.aqi;
+    if (prefEarthquake) prefEarthquake.checked = !!data.preferences?.earthquake;
 }
 
 function saveProfile() {
@@ -99,22 +75,8 @@ function saveProfile() {
         preferences
     };
 
-    localStorage.setItem('deshsafe_profile', JSON.stringify(profileData));
-
-    // Update UI elements dynamically
-    const identityName = document.querySelector('.identity-name');
-    if (identityName) identityName.textContent = name || 'Anonymous';
-
-    const initials = getInitials(name);
-    const avatarRing = document.querySelector('.avatar-ring');
-    const navAvatar = document.querySelector('.nav-avatar');
-    if (avatarRing) avatarRing.textContent = initials;
-    if (navAvatar) navAvatar.textContent = initials;
-
-    const navLocation = document.querySelector('.nav-location');
-    if (navLocation) {
-        navLocation.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${location || 'Unknown'}`;
-    }
+    // Save to single source of truth (automatically triggers syncUI)
+    window.DeshSafe.saveProfile(profileData);
 
     // Trigger toast message
     const toast = document.getElementById('toast');
