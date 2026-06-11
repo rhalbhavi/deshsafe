@@ -125,6 +125,15 @@ body {
 .nav-links a:hover { color: var(--red); }
 .nav-links a:hover::after { width: 100%; }
 
+/* Active nav link */
+.nav-links a.active {
+    color: var(--red);
+}
+
+.nav-links a.active::after {
+    width: 100%;
+}
+
 .nav-btn {
     background: var(--grad-brand);
     color: #fff;
@@ -156,7 +165,7 @@ body {
     gap: 5px;
     font-weight: 500;
 }
-.nav-location i { color: var(--red); font-size: 12px; }
+.nav-location i { color: var(--red); font-size: 12; margin-left: 80px; }
 
 .nav-alert-badge {
     background: rgba(255,107,107,0.08);
