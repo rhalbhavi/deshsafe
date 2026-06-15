@@ -41,6 +41,7 @@ document.querySelectorAll('.feature-card').forEach(function(card) {
 
 //steps
 const steps = document.querySelectorAll('.step-item');
+const STORAGE_KEY = 'completedSteps';
 function updateProgress() {
     const total = steps.length;
     const completed = document.querySelectorAll('.step-item.completed').length;
@@ -56,9 +57,40 @@ function updateProgress() {
 steps.forEach(function(step) {
     step.addEventListener('click', function() {
         step.classList.toggle('completed');
+
+        saveSteps();
+
         updateProgress();
     });
 });
+loadSteps();
+function saveSteps() {
+    const completedIndices = [];
+
+    steps.forEach((step, index) => {
+        if (step.classList.contains('completed')) {
+            completedIndices.push(index);
+        }
+    });
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(completedIndices)
+    );
+}
+
+function loadSteps() {
+    const saved =
+        JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+    saved.forEach(index => {
+        if (steps[index]) {
+            steps[index].classList.add('completed');
+        }
+    });
+
+    updateProgress();
+}
 
 /// ── Dark Mode ──
 (function () {
