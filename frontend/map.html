@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeshSafe — Incident Map</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/map.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script>!function(){var t=localStorage.getItem("deshsafe-theme");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}();</script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="dashboard.html" class="nav-brand" style="text-decoration: none;">🛡️ DeshSafe</a>
+            <div class="nav-center">
+                <ul class="nav-links">
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="action.html">Action</a></li>
+                    <li><a href="report.html">Report</a></li>
+                    <li><a href="map.html" class="active">Map</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                </ul>
+                <span class="nav-location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    New Delhi, India
+                </span>
+            </div>
+            <div class="nav-right">
+                <a href="report.html" class="nav-alert-badge" style="background: rgba(255,107,107,0.08); color: var(--red); border-color: var(--border-red); text-decoration: none; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-triangle-exclamation"></i> Report Incident</a>
+                <span class="nav-alert-badge">⚠️ 2 Alerts</span>
+                <button class="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-sun icon-sun"></i>
+                    <i class="fa-solid fa-moon icon-moon"></i>
+                </button>
+                <a href="profile.html" class="nav-avatar" title="My Profile">AP</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="map-body">
+        <div class="map-page-container">
+
+            <div class="page-header" style="display: flex; align-items: center; gap: 16px;">
+                <a class="back-btn" href="dashboard.html" aria-label="Back to dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 style="margin-bottom: 2px;">Incident Map</h1>
+                    <p>Active alerts and community reports near you, colour-coded by severity.</p>
+                </div>
+            </div>
+
+            <div class="map-layout">
+                <div id="incident-map"></div>
+
+                <div class="map-legend">
+                    <h4>Severity</h4>
+                    <div><span class="legend-dot green"></span> Low</div>
+                    <div><span class="legend-dot orange"></span> Medium</div>
+                    <div><span class="legend-dot red"></span> High</div>
+                    <div><span class="legend-dot darkred"></span> Critical</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/map.js"></script>
+</body>
+</html>

@@ -164,6 +164,8 @@ window.DeshSafe = {
                     description: 'Temperature above 42°C expected until Friday. High risk for elderly, children, and outdoor workers. Avoid going outside between 11am–5pm.',
                     severity: 'high',
                     location: 'Delhi NCR',
+                    lat: 28.6139,
+                    lng: 77.2090,
                     tags: ['Drink water hourly', 'Stay indoors 11am–5pm', 'Watch for heatstroke']
                 },
                 {
@@ -173,6 +175,8 @@ window.DeshSafe = {
                     description: 'Unhealthy for sensitive groups. Wear a mask if going outside. Keep windows closed during afternoon hours.',
                     severity: 'moderate',
                     location: 'Delhi NCR',
+                    lat: 28.6304,
+                    lng: 77.2177,
                     tags: ['Wear N95 mask', 'Close windows 12–4pm']
                 }
             ],
@@ -193,6 +197,8 @@ window.DeshSafe = {
                     type: 'flood',
                     title: 'Waterlogging — Minto Road underpass',
                     location: 'Central Delhi',
+                    lat: 28.6358,
+                    lng: 77.2245,
                     reported_at: '2026-05-16T08:35:00+05:30',
                     severity: 'high',
                     status: 'confirmed',
@@ -203,6 +209,8 @@ window.DeshSafe = {
                     type: 'other',
                     title: 'Power outage — Sector 15 Rohini',
                     location: 'North Delhi',
+                    lat: 28.7158,
+                    lng: 77.1183,
                     reported_at: '2026-05-16T08:00:00+05:30',
                     severity: 'moderate',
                     status: 'verifying',
@@ -213,6 +221,8 @@ window.DeshSafe = {
                     type: 'other',
                     title: 'Tree fallen on road — Golf Links',
                     location: 'South Delhi',
+                    lat: 28.5879,
+                    lng: 77.2294,
                     reported_at: '2026-05-16T06:00:00+05:30',
                     severity: 'low',
                     status: 'resolved',

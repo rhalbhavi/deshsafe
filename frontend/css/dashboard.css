@@ -152,6 +152,8 @@
 }
 .level-high     { background: var(--red);   color: #fff; }
 .level-moderate { background: var(--amber); color: #fff; }
+.level-low      { background: var(--green); color: #fff; }
+.level-critical { background: var(--darkred); color: #fff; }
 .alert-body { padding: 14px 16px; }
 .alert-title {
     font-size: 14.5px;
