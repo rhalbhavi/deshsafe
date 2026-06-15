@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Alerts: public read, no client write (managed via Firebase Console / Admin SDK) ──
+    match /alerts/{alertId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Incidents (Community Reports): public read, authenticated write only ──
+    match /incidents/{incidentId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.reportedBy == request.auth.uid;
+      // Only the original reporter can update/delete their report
+      allow update, delete: if request.auth != null
+                             && resource.data.reportedBy == request.auth.uid;
+    }
+
+    // ── Users: only the owner can read or write their own profile ──
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+  }
+}

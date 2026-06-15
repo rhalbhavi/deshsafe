@@ -157,16 +157,16 @@ function clearFieldError(field) {
 });
 
 // ── Submit Report ──
-function submitReport() {
-    const titleEl = document.getElementById('incident-title');
-    const descEl = document.getElementById('incident-desc');
+async function submitReport() {
+    const titleEl    = document.getElementById('incident-title');
+    const descEl     = document.getElementById('incident-desc');
     const locationEl = document.getElementById('incident-location');
-    const timeEl = document.getElementById('incident-time');
+    const timeEl     = document.getElementById('incident-time');
 
-    const title = titleEl?.value.trim();
-    const desc = descEl?.value.trim();
+    const title    = titleEl?.value.trim();
+    const desc     = descEl?.value.trim();
     const location = locationEl?.value.trim();
-    const time = timeEl?.value;
+    const time     = timeEl?.value;
 
     // Clear all previous errors first
     [titleEl, descEl, locationEl, timeEl].forEach(f => {
@@ -206,33 +206,56 @@ function submitReport() {
     const randomId = 'DS-' + Math.floor(1000 + Math.random() * 9000);
 
     const report = {
-        id: randomId,
-        type: selectedType,
-        severity: selectedSeverity,
+        id:          randomId,
+        type:        selectedType,
+        severity:    selectedSeverity,
         title,
         description: desc,
         location,
         time,
-        photo: photoBase64 || null,
+        photo:       photoBase64 || null,
         submittedAt: new Date().toISOString()
     };
 
-    // Save via central manager
-    window.DeshSafe.saveReport(report);
+    // Show loading state on submit button
+    const submitBtn = document.querySelector('[onclick="submitReport()"]');
+    if (submitBtn) {
+        submitBtn.disabled    = true;
+        submitBtn.textContent = 'Submitting...';
+    }
 
-    // Update report ID display
-    const reportIdEl = document.getElementById('report-id');
-    if (reportIdEl) reportIdEl.textContent = `Report ID: #${randomId}`;
+    try {
+        // Save via central manager (writes to Firestore)
+        await window.DeshSafe.saveReport(report);
 
-    // Hide form, show success
-    const formContainer = document.getElementById('report-form');
-    if (formContainer) formContainer.style.display = 'none';
+        // Update report ID display
+        const reportIdEl = document.getElementById('report-id');
+        if (reportIdEl) reportIdEl.textContent = `Report ID: #${randomId}`;
 
-    const successScreen = document.getElementById('success-screen');
-    if (successScreen) successScreen.classList.add('show');
+        // Hide form, show success
+        const formContainer = document.getElementById('report-form');
+        if (formContainer) formContainer.style.display = 'none';
 
-    // Scroll to success screen
-    if (successScreen) {
-        successScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const successScreen = document.getElementById('success-screen');
+        if (successScreen) successScreen.classList.add('show');
+
+        // Scroll to success screen
+        if (successScreen) {
+            successScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch (err) {
+        console.error('Failed to submit report:', err);
+        const form = document.getElementById('report-form');
+        if (form && !form.querySelector('.submit-error')) {
+            const errorEl = document.createElement('p');
+            errorEl.className = 'submit-error';
+            errorEl.style.cssText = 'color:var(--red);text-align:center;font-size:13.5px;margin-top:12px;font-weight:600;';
+            errorEl.textContent = '⚠️ Could not submit report. Check your connection and try again.';
+            form.appendChild(errorEl);
+        }
+        if (submitBtn) {
+            submitBtn.disabled    = false;
+            submitBtn.textContent = 'Submit Report';
+        }
     }
 }
