@@ -128,55 +128,96 @@ function getInitials(name) {
 
 // ── Consolidated Data Integration Layer (Single Source of Truth) ──
 window.DeshSafe = {
-    // Retrieves profile data from localStorage or falls back to default Anushka Pandey profile
-    getProfile() {
-        const saved = localStorage.getItem('deshsafe_profile');
-        if (saved) {
+    // ── Current logged-in user (set by auth guard) ──
+    currentUser: null,
+
+    // Retrieves profile data from Firestore for the logged-in user.
+    // Falls back to a guest default if not authenticated.
+    async getProfile() {
+        if (this.currentUser) {
             try {
-                return JSON.parse(saved);
+                const { getProfile } = await import('./firebase.js');
+                return await getProfile(this.currentUser.uid);
             } catch (e) {
-                console.error('Error parsing profile data from localStorage:', e);
+                console.error('Error fetching profile from Firestore:', e);
             }
         }
-        // Fallback default values matching the Anushka profile
+        // Guest / unauthenticated fallback
         return {
-            name: 'Anushka Pandey',
-            age: '21',
-            phone: '7428525668',
+            name: 'Guest',
+            age: '',
+            phone: '',
             familySize: '4 members',
-            location: 'New Delhi, India',
-            healthTags: ['Asthma'],
+            location: 'India',
+            healthTags: [],
             preferences: { heatwave: true, flood: true, aqi: true, earthquake: false }
         };
     },
 
-    // Saves profile data, dispatches updates, and triggers UI sync
-    saveProfile(profileData) {
-        localStorage.setItem('deshsafe_profile', JSON.stringify(profileData));
+    // Saves profile data to Firestore, dispatches updates, and triggers UI sync
+    async saveProfile(profileData) {
+        if (this.currentUser) {
+            try {
+                const { saveProfile } = await import('./firebase.js');
+                await saveProfile(this.currentUser.uid, profileData);
+            } catch (e) {
+                console.error('Error saving profile to Firestore:', e);
+            }
+        }
         window.dispatchEvent(new CustomEvent('deshsafe-profile-update', { detail: profileData }));
-        this.syncUI();
+        this.syncUIWithProfile(profileData);
     },
 
-    // Retrieves submitted user reports
-    getReports() {
+    // Retrieves the current user's submitted reports from Firestore
+    async getReports() {
+        if (this.currentUser) {
+            try {
+                const { getUserReports } = await import('./firebase.js');
+                return await getUserReports(this.currentUser.uid);
+            } catch (e) {
+                console.error('Error fetching reports from Firestore:', e);
+            }
+        }
+        return [];
+    },
+
+    // Saves a new incident report to Firestore
+    async saveReport(report) {
+        if (!this.currentUser) {
+            console.warn('Cannot save report — user not authenticated.');
+            return;
+        }
         try {
-            return JSON.parse(localStorage.getItem('deshsafe_reports') || '[]');
+            const { saveReport } = await import('./firebase.js');
+            await saveReport(this.currentUser.uid, report);
+            window.dispatchEvent(new CustomEvent('deshsafe-reports-update'));
         } catch (e) {
-            console.error('Error parsing reports from localStorage:', e);
-            return [];
+            console.error('Error saving report to Firestore:', e);
+            throw e;
         }
     },
 
-    // Adds a user report and dispatches update events
-    saveReport(report) {
-        const reports = this.getReports();
-        reports.push(report);
-        localStorage.setItem('deshsafe_reports', JSON.stringify(reports));
-        window.dispatchEvent(new CustomEvent('deshsafe-reports-update', { detail: reports }));
+    // Fetches live alerts and weather data.
+    // Tries Firestore alerts collection first, falls back to static alerts.json.
+    async fetchAlertsAndWeather() {
+        // Try Firestore alerts first
+        try {
+            const { getCommunityReports } = await import('./firebase.js');
+            const firestoreReports = await getCommunityReports();
+            // If Firestore has community reports, merge with static alert/weather data
+            if (firestoreReports.length > 0) {
+                const staticData = await this._fetchStaticAlerts();
+                return { ...staticData, community_reports: firestoreReports };
+            }
+        } catch (e) {
+            console.warn('Could not fetch Firestore reports, falling back:', e);
+        }
+        // Fall back to static alerts.json
+        return this._fetchStaticAlerts();
     },
 
-    // Fetches live alerts and weather data from alerts.json with static fallback
-    async fetchAlertsAndWeather() {
+    // Internal: fetches the static alerts.json with fallback mock data
+    async _fetchStaticAlerts() {
         try {
             const res = await fetch('data/alerts.json');
             if (res.ok) {
@@ -265,8 +306,8 @@ window.DeshSafe = {
     },
 
     // Synchronizes the user profile elements globally across all pages
-    syncUI() {
-        const profile = this.getProfile();
+    // Accepts a profile object directly (avoids redundant async call)
+    syncUIWithProfile(profile) {
         const initials = getInitials(profile.name);
 
         // 1. Sync avatar initials globally
@@ -336,9 +377,15 @@ window.DeshSafe = {
         }
     },
 
+    // Synchronizes UI on page load by fetching profile from Firestore first
+    async syncUI() {
+        const profile = await this.getProfile();
+        this.syncUIWithProfile(profile);
+    },
+
     // Fetches live data and populates dashboard alerts, weather, and history dynamically
     async initializeDashboard() {
-        const profile = this.getProfile();
+        const profile = await this.getProfile();
         const data = await this.fetchAlertsAndWeather();
         const weather = data.weather;
 
@@ -405,7 +452,7 @@ window.DeshSafe = {
             }
 
             const communityReports = data.community_reports || [];
-            const userReports = this.getReports();
+            const userReports = await this.getReports();
 
             // Format user-submitted reports for the unified view
             const formattedUserReports = userReports.map(rep => ({
@@ -558,12 +605,59 @@ function formatReportTime(dateStr) {
 }
 
 // Global initialization logic on page load
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Sync global UI elements using profile data
-    window.DeshSafe.syncUI();
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Set up auth state listener
+    try {
+        const { onAuthChange, logOut } = await import('./firebase.js');
 
-    // 2. Initialize dashboard dynamics if present
-    if (document.getElementById('stat-temp') || document.querySelector('.alerts-section')) {
-        window.DeshSafe.initializeDashboard();
+        onAuthChange(async (user) => {
+            window.DeshSafe.currentUser = user || null;
+
+            // Auth guard: protect dashboard, report, profile, action pages
+            const protectedPages = ['dashboard.html', 'report.html', 'profile.html', 'action.html'];
+            const currentPage    = window.location.pathname.split('/').pop();
+            if (!user && protectedPages.includes(currentPage)) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // 2. Sync global UI elements using Firestore profile
+            await window.DeshSafe.syncUI();
+
+            // 3. Update navbar auth button state
+            _updateNavAuthButton(user, logOut);
+
+            // 4. Initialize dashboard dynamics if present
+            if (document.getElementById('stat-temp') || document.querySelector('.alerts-section')) {
+                await window.DeshSafe.initializeDashboard();
+            }
+        });
+    } catch (e) {
+        // Firebase not yet configured — run without auth for local preview
+        console.warn('Firebase not configured. Running in offline/preview mode.', e);
+        await window.DeshSafe.syncUI();
+        if (document.getElementById('stat-temp') || document.querySelector('.alerts-section')) {
+            await window.DeshSafe.initializeDashboard();
+        }
     }
 });
+
+// ── Navbar auth button helper ──
+function _updateNavAuthButton(user, logOut) {
+    const authBtn = document.getElementById('nav-auth-btn');
+    if (!authBtn) return;
+
+    if (user) {
+        authBtn.textContent = 'Sign Out';
+        authBtn.href = '#';
+        authBtn.onclick = async (e) => {
+            e.preventDefault();
+            await logOut();
+            window.location.href = 'auth.html';
+        };
+    } else {
+        authBtn.textContent = 'Sign In';
+        authBtn.href = 'auth.html';
+        authBtn.onclick = null;
+    }
+}

@@ -1,12 +1,13 @@
 // DeshSafe — profile.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadProfile();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadProfile();
 });
 
 
-function loadProfile() {
-    const data = window.DeshSafe.getProfile();
+async function loadProfile() {
+    const data = await window.DeshSafe.getProfile();
+
 
     // Populate form inputs
     const nameInput = document.getElementById('profile-name');
@@ -44,12 +45,12 @@ function loadProfile() {
     if (prefEarthquake) prefEarthquake.checked = !!data.preferences?.earthquake;
 }
 
-function saveProfile() {
-    const name = document.getElementById('profile-name')?.value.trim() || '';
-    const age = document.getElementById('profile-age')?.value.trim() || '';
-    const phone = document.getElementById('profile-phone')?.value.trim() || '';
+async function saveProfile() {
+    const name       = document.getElementById('profile-name')?.value.trim() || '';
+    const age        = document.getElementById('profile-age')?.value.trim() || '';
+    const phone      = document.getElementById('profile-phone')?.value.trim() || '';
     const familySize = document.getElementById('profile-family')?.value || '';
-    const location = document.getElementById('profile-location')?.value.trim() || '';
+    const location   = document.getElementById('profile-location')?.value.trim() || '';
 
     // Extract active health tags
     const healthTags = [];
@@ -59,31 +60,21 @@ function saveProfile() {
 
     // Extract alert preferences
     const preferences = {
-        heatwave: document.getElementById('pref-heatwave')?.checked || false,
-        flood: document.getElementById('pref-flood')?.checked || false,
-        aqi: document.getElementById('pref-aqi')?.checked || false,
+        heatwave:   document.getElementById('pref-heatwave')?.checked  || false,
+        flood:      document.getElementById('pref-flood')?.checked      || false,
+        aqi:        document.getElementById('pref-aqi')?.checked        || false,
         earthquake: document.getElementById('pref-earthquake')?.checked || false
     };
 
-    const profileData = {
-        name,
-        age,
-        phone,
-        familySize,
-        location,
-        healthTags,
-        preferences
-    };
+    const profileData = { name, age, phone, familySize, location, healthTags, preferences };
 
-    // Save to single source of truth (automatically triggers syncUI)
-    window.DeshSafe.saveProfile(profileData);
+    // Save to Firestore via central manager (automatically triggers syncUI)
+    await window.DeshSafe.saveProfile(profileData);
 
     // Trigger toast message
     const toast = document.getElementById('toast');
     if (toast) {
         toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 }
