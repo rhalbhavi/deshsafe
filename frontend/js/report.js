@@ -213,6 +213,8 @@ async function submitReport() {
         description: desc,
         location,
         time,
+        lat:         detectedCoords?.lat ?? null,
+        lng:         detectedCoords?.lng ?? null,
         photo:       photoBase64 || null,
         submittedAt: new Date().toISOString()
     };
