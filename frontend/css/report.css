@@ -314,6 +314,7 @@
 .severity-btn.low.selected    { border-color: var(--green); background: rgba(72,187,120,0.08);  color: var(--green); }
 .severity-btn.medium.selected { border-color: var(--amber); background: rgba(255,179,71,0.08);  color: var(--amber); }
 .severity-btn.high.selected   { border-color: var(--red);   background: rgba(255,107,107,0.08); color: var(--red);   }
+.severity-btn.critical.selected { border-color: var(--darkred); background: rgba(139,0,0,0.08); color: var(--darkred); }
 
 /* ── Photo Upload ── */
 .upload-zone {

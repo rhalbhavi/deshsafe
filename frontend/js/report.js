@@ -5,6 +5,7 @@
 let selectedType = 'Heatwave';
 let selectedSeverity = 'medium';
 let photoBase64 = null;
+let detectedCoords = null;
 
 // Autofill current time on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -84,6 +85,7 @@ function detectLocation() {
     navigator.geolocation.getCurrentPosition(
         async (position) => {
             const { latitude, longitude } = position.coords;
+            detectedCoords = { lat: latitude, lng: longitude };
             try {
                 const res = await fetch(
                     `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
@@ -213,9 +215,9 @@ async function submitReport() {
         description: desc,
         location,
         time,
-        lat:         detectedCoords?.lat ?? null,
-        lng:         detectedCoords?.lng ?? null,
-        photo:       photoBase64 || null,
+        lat: detectedCoords?.lat ?? null,
+        lng: detectedCoords?.lng ?? null,
+        photo: photoBase64 || null,
         submittedAt: new Date().toISOString()
     };
 
