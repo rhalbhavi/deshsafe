@@ -199,11 +199,17 @@ window.DeshSafe = {
 
     // Fetches live alerts and weather data.
     // Tries Firestore alerts collection first, falls back to static alerts.json.
+    // Firestore is time-boxed so an unconfigured/unreachable project can't block
+    // the page from ever rendering the static fallback data.
     async fetchAlertsAndWeather() {
-        // Try Firestore alerts first
         try {
-            const { getCommunityReports } = await import('./firebase.js');
-            const firestoreReports = await getCommunityReports();
+            const firestoreReports = await this._withTimeout(
+                (async () => {
+                    const { getCommunityReports } = await import('./firebase.js');
+                    return getCommunityReports();
+                })(),
+                4000
+            );
             // If Firestore has community reports, merge with static alert/weather data
             if (firestoreReports.length > 0) {
                 const staticData = await this._fetchStaticAlerts();
@@ -214,6 +220,14 @@ window.DeshSafe = {
         }
         // Fall back to static alerts.json
         return this._fetchStaticAlerts();
+    },
+
+    // Internal: rejects with a timeout error if the given promise doesn't settle in time
+    _withTimeout(promise, ms) {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timed out after ' + ms + 'ms')), ms))
+        ]);
     },
 
     // Internal: fetches the static alerts.json with fallback mock data

@@ -66,39 +66,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         maxZoom: 19
     }).addTo(map);
 
-    const data = await window.DeshSafe.fetchAlertsAndWeather();
+    try {
+        const data = await window.DeshSafe.fetchAlertsAndWeather();
 
-    // Active alerts (heatwave, air quality, etc.)
-    (data.active_alerts || []).forEach(alert => addIncidentMarker(map, {
-        title: alert.title,
-        description: alert.description,
-        location: alert.location,
-        severity: alert.severity,
-        lat: alert.lat,
-        lng: alert.lng
-    }));
+        // Active alerts (heatwave, air quality, etc.)
+        (data.active_alerts || []).forEach(alert => addIncidentMarker(map, {
+            title: alert.title,
+            description: alert.description,
+            location: alert.location,
+            severity: alert.severity,
+            lat: alert.lat,
+            lng: alert.lng
+        }));
 
-    // Community-submitted reports from sample data
-    (data.community_reports || []).forEach(report => addIncidentMarker(map, {
-        title: report.title,
-        location: report.location,
-        severity: report.severity,
-        lat: report.lat,
-        lng: report.lng
-    }));
-
-    // Reports submitted from this device via the report form
-    window.DeshSafe.getReports().forEach(report => {
-        const hasCoords = report.lat != null && report.lng != null;
-        const [lat, lng] = hasCoords ? [report.lat, report.lng] : jitterAroundCenter();
-
-        addIncidentMarker(map, {
-            title: `${report.title} (${report.type})`,
-            description: report.description,
+        // Community-submitted reports from sample data
+        (data.community_reports || []).forEach(report => addIncidentMarker(map, {
+            title: report.title,
             location: report.location,
             severity: report.severity,
-            lat,
-            lng
+            lat: report.lat,
+            lng: report.lng
+        }));
+
+        // Reports submitted from this device via the report form
+        const userReports = await window.DeshSafe.getReports();
+        userReports.forEach(report => {
+            const hasCoords = report.lat != null && report.lng != null;
+            const [lat, lng] = hasCoords ? [report.lat, report.lng] : jitterAroundCenter();
+
+            addIncidentMarker(map, {
+                title: `${report.title} (${report.type})`,
+                description: report.description,
+                location: report.location,
+                severity: report.severity,
+                lat,
+                lng
+            });
         });
-    });
+    } catch (err) {
+        console.error('Failed to load incident data:', err);
+        showMapErrorBanner();
+    }
 });
+
+// User-facing fallback if alerts/reports fail to load entirely
+function showMapErrorBanner() {
+    const container = document.querySelector('.map-page-container');
+    if (!container) return;
+    const banner = document.createElement('div');
+    banner.className = 'map-error-banner';
+    banner.textContent = 'Unable to load live incident data. Please refresh the page or try again later.';
+    container.prepend(banner);
+}
