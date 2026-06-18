@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "sourcedFrom": "Only the universal numbers below (police/fire/ambulance) are confirmed against consistent public/government reporting. NDMA's exact national control room number and every state/district control room number must be sourced from ndma.gov.in and each State Disaster Management Authority's own official site before being added here — do not fill these in from aggregator sites or by pattern-guessing area codes.",
+    "lastVerified": "2026-06-18",
+    "verifiedFields": ["national.policeEmergency", "national.fireServices", "national.ambulance"],
+    "unverifiedFields": ["national.ndmaHelpline", "national.disasterManagementHelpline", "all state.stateControlRoom and district.districtControlRoom values"]
+  },
+  "national": {
+    "ndmaHelpline": null,
+    "policeEmergency": "112",
+    "fireServices": "101",
+    "ambulance": "108",
+    "disasterManagementHelpline": null
+  },
+  "states": [
+    {
+      "name": "Maharashtra",
+      "stateControlRoom": null,
+      "districts": [
+        { "name": "Mumbai", "districtControlRoom": null },
+        { "name": "Pune", "districtControlRoom": null },
+        { "name": "Nagpur", "districtControlRoom": null }
+      ]
+    },
+    {
+      "name": "Delhi",
+      "stateControlRoom": null,
+      "districts": [
+        { "name": "New Delhi", "districtControlRoom": null },
+        { "name": "North Delhi", "districtControlRoom": null },
+        { "name": "South Delhi", "districtControlRoom": null }
+      ]
+    },
+    {
+      "name": "Karnataka",
+      "stateControlRoom": null,
+      "districts": [
+        { "name": "Bengaluru Urban", "districtControlRoom": null },
+        { "name": "Mysuru", "districtControlRoom": null }
+      ]
+    },
+    {
+      "name": "Tamil Nadu",
+      "stateControlRoom": null,
+      "districts": [
+        { "name": "Chennai", "districtControlRoom": null },
+        { "name": "Coimbatore", "districtControlRoom": null }
+      ]
+    },
+    {
+      "name": "West Bengal",
+      "stateControlRoom": null,
+      "districts": [
+        { "name": "Kolkata", "districtControlRoom": null },
+        { "name": "Howrah", "districtControlRoom": null }
+      ]
+    }
+  ]
+}
