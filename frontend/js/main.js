@@ -467,9 +467,11 @@ window.DeshSafe = {
 
             const communityReports = data.community_reports || [];
             const userReports = await this.getReports();
+            // Reports saved locally because Firestore was unreachable at submit time
+            const localReports = typeof getStoredReports === 'function' ? getStoredReports() : [];
 
             // Format user-submitted reports for the unified view
-            const formattedUserReports = userReports.map(rep => ({
+            const formattedUserReports = [...userReports, ...localReports].map(rep => ({
                 id: rep.id,
                 type: rep.type.toLowerCase(),
                 title: rep.title,

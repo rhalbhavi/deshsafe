@@ -228,38 +228,58 @@ async function submitReport() {
         submitBtn.textContent = 'Submitting...';
     }
 
+    let offlineNotice = null;
+
     try {
         // Save via central manager (writes to Firestore)
         await window.DeshSafe.saveReport(report);
-
-        // Update report ID display
-        const reportIdEl = document.getElementById('report-id');
-        if (reportIdEl) reportIdEl.textContent = `Report ID: #${randomId}`;
-
-        // Hide form, show success
-        const formContainer = document.getElementById('report-form');
-        if (formContainer) formContainer.style.display = 'none';
-
-        const successScreen = document.getElementById('success-screen');
-        if (successScreen) successScreen.classList.add('show');
-
-        // Scroll to success screen
-        if (successScreen) {
-            successScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
     } catch (err) {
-        console.error('Failed to submit report:', err);
-        const form = document.getElementById('report-form');
-        if (form && !form.querySelector('.submit-error')) {
-            const errorEl = document.createElement('p');
-            errorEl.className = 'submit-error';
-            errorEl.style.cssText = 'color:var(--red);text-align:center;font-size:13.5px;margin-top:12px;font-weight:600;';
-            errorEl.textContent = '⚠️ Could not submit report. Check your connection and try again.';
-            form.appendChild(errorEl);
+        console.error('Failed to submit report to Firestore, falling back to local storage:', err);
+
+        // Firestore unreachable (offline, quota, etc.) — fall back to local storage
+        // so the report isn't lost; map.js/main.js merge this in until it can sync.
+        const savedLocally = saveReport(report);
+
+        if (!savedLocally) {
+            const form = document.getElementById('report-form');
+            if (form && !form.querySelector('.submit-error')) {
+                const errorEl = document.createElement('p');
+                errorEl.className = 'submit-error';
+                errorEl.style.cssText = 'color:var(--red);text-align:center;font-size:13.5px;margin-top:12px;font-weight:600;';
+                errorEl.textContent = '⚠️ Could not save your report. Your browser storage may be full or disabled.';
+                form.appendChild(errorEl);
+            }
+            if (submitBtn) {
+                submitBtn.disabled    = false;
+                submitBtn.textContent = 'Submit Report';
+            }
+            return;
         }
-        if (submitBtn) {
-            submitBtn.disabled    = false;
-            submitBtn.textContent = 'Submit Report';
+
+        offlineNotice = 'Saved offline — it will sync once you\'re back online.';
+    }
+
+    // Update report ID display
+    const reportIdEl = document.getElementById('report-id');
+    if (reportIdEl) reportIdEl.textContent = `Report ID: #${randomId}`;
+
+    // Hide form, show success
+    const formContainer = document.getElementById('report-form');
+    if (formContainer) formContainer.style.display = 'none';
+
+    const successScreen = document.getElementById('success-screen');
+    if (successScreen) {
+        successScreen.classList.add('show');
+        if (offlineNotice) {
+            let noticeEl = successScreen.querySelector('.offline-notice');
+            if (!noticeEl) {
+                noticeEl = document.createElement('p');
+                noticeEl.className = 'offline-notice';
+                noticeEl.style.cssText = 'color:var(--text-muted);text-align:center;font-size:13px;margin-top:8px;';
+                successScreen.appendChild(noticeEl);
+            }
+            noticeEl.textContent = offlineNotice;
         }
+        successScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }

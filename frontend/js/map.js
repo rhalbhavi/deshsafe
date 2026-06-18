@@ -88,9 +88,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             lng: report.lng
         }));
 
-        // Reports submitted from this device via the report form
+        // Reports submitted from this device via the report form, plus any
+        // saved locally because Firestore was unreachable at submit time
         const userReports = await window.DeshSafe.getReports();
-        userReports.forEach(report => {
+        const localReports = typeof getStoredReports === 'function' ? getStoredReports() : [];
+        [...userReports, ...localReports].forEach(report => {
             const hasCoords = report.lat != null && report.lng != null;
             const [lat, lng] = hasCoords ? [report.lat, report.lng] : jitterAroundCenter();
 
