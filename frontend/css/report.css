@@ -550,3 +550,7 @@
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Geolocation Status ── */
+#gps-status.location-success { color: var(--green); font-weight: 600; }
+#gps-status.location-error   { color: var(--red);   font-weight: 600; }
