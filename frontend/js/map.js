@@ -80,16 +80,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             lng: report.lng
         }));
 
-        // Reports submitted from this device via the report form
+        // Reports submitted from this device via the report form, plus any
+        // saved locally because Firestore was unreachable at submit time
         const userReports = await window.DeshSafe.getReports();
-        userReports.forEach(report => addIncidentMarker(map, {
-            title: `${report.title} (${report.type})`,
-            description: report.description,
-            location: report.location,
-            severity: report.severity,
-            lat: report.lat,
-            lng: report.lng
-        }));
+        const localReports = typeof getStoredReports === 'function' ? getStoredReports() : [];
+        [...userReports, ...localReports].forEach(report => {
+            const hasCoords = report.lat != null && report.lng != null;
+            const [lat, lng] = hasCoords ? [report.lat, report.lng] : jitterAroundCenter();
+
+            addIncidentMarker(map, {
+                title: `${report.title} (${report.type})`,
+                description: report.description,
+                location: report.location,
+                severity: report.severity,
+                lat,
+                lng
+            });
+        });
     } catch (err) {
         console.error('Failed to load incident data:', err);
         showMapErrorBanner();
