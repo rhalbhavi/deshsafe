@@ -5,7 +5,6 @@
 let selectedType = 'Heatwave';
 let selectedSeverity = 'medium';
 let photoBase64 = null;
-let detectedCoords = null;
 
 // Autofill current time on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -74,18 +73,31 @@ function previewPhoto(event) {
 function detectLocation() {
     const status = document.getElementById('gps-status');
     const locationInput = document.getElementById('incident-location');
+    const latInput = document.getElementById('report-lat');
+    const lngInput = document.getElementById('report-lng');
 
     if (!navigator.geolocation) {
-        if (status) status.textContent = 'Geolocation is not supported by your browser.';
+        if (status) {
+            status.textContent = 'Geolocation is not supported by your browser. Please enter your location manually.';
+            status.classList.remove('location-success');
+            status.classList.add('location-error');
+        }
+        if (locationInput) locationInput.focus();
         return;
     }
 
-    if (status) status.textContent = 'Detecting your location...';
+    if (status) {
+        status.textContent = 'Detecting your location...';
+        status.classList.remove('location-success', 'location-error');
+    }
 
     navigator.geolocation.getCurrentPosition(
         async (position) => {
-            const { latitude, longitude } = position.coords;
-            detectedCoords = { lat: latitude, lng: longitude };
+            const { latitude, longitude, accuracy } = position.coords;
+            if (latInput) latInput.value = latitude;
+            if (lngInput) lngInput.value = longitude;
+
+            const accuracyText = `±${Math.round(accuracy)}m accuracy`;
             try {
                 const res = await fetch(
                     `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
@@ -93,18 +105,29 @@ function detectLocation() {
                 const data = await res.json();
                 const address = data.display_name || `${latitude}, ${longitude}`;
                 locationInput.value = address;
-                if (status) status.textContent = '✅ Location detected.';
+                if (status) status.textContent = `✅ Location captured (${accuracyText})`;
                 // Clear error style since value is entered
                 clearFieldError(locationInput);
             } catch {
                 locationInput.value = `${latitude}, ${longitude}`;
-                if (status) status.textContent = '✅ Coordinates captured (reverse geocode failed).';
+                if (status) status.textContent = `✅ Coordinates captured (${accuracyText}, reverse geocode failed)`;
                 clearFieldError(locationInput);
+            }
+            if (status) {
+                status.classList.remove('location-error');
+                status.classList.add('location-success');
             }
         },
         (err) => {
-            if (status) status.textContent = `❌ Could not get location: ${err.message}`;
-        }
+            // err.code: 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT
+            if (status) {
+                status.textContent = `❌ Could not get location automatically (${err.message}). Please enter it manually below.`;
+                status.classList.remove('location-success');
+                status.classList.add('location-error');
+            }
+            if (locationInput) locationInput.focus();
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
@@ -215,8 +238,8 @@ async function submitReport() {
         description: desc,
         location,
         time,
-        lat: detectedCoords?.lat ?? null,
-        lng: detectedCoords?.lng ?? null,
+        lat: parseFloat(document.getElementById('report-lat')?.value) || null,
+        lng: parseFloat(document.getElementById('report-lng')?.value) || null,
         photo: photoBase64 || null,
         submittedAt: new Date().toISOString()
     };

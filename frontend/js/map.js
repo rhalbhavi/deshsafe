@@ -30,14 +30,6 @@ function getMarkerIcon(severity) {
     });
 }
 
-// Spread out incidents that don't have coordinates so they don't all stack on the same point
-function jitterAroundCenter() {
-    return [
-        DEFAULT_CENTER[0] + (Math.random() - 0.5) * 0.06,
-        DEFAULT_CENTER[1] + (Math.random() - 0.5) * 0.06
-    ];
-}
-
 function addIncidentMarker(map, incident) {
     if (incident.lat == null || incident.lng == null) return;
 
