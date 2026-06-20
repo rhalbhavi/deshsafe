@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeshSafe — Incident Map</title>
+    <title>DeshSafe — Emergency Helplines</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/map.css">
+    <link rel="stylesheet" href="css/helplines.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script>!function(){var t=localStorage.getItem("deshsafe-theme");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}();</script>
 </head>
 <body>
@@ -20,8 +19,8 @@
                     <li><a href="dashboard.html">Dashboard</a></li>
                     <li><a href="action.html">Action</a></li>
                     <li><a href="report.html">Report</a></li>
-                    <li><a href="map.html" class="active">Map</a></li>
-                    <li><a href="helplines.html">Helplines</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="helplines.html" class="active">Helplines</a></li>
                     <li><a href="profile.html">Profile</a></li>
                 </ul>
                 <span class="nav-location">
@@ -32,6 +31,7 @@
             <div class="nav-right">
                 <a href="report.html" class="nav-alert-badge" style="background: rgba(255,107,107,0.08); color: var(--red); border-color: var(--border-red); text-decoration: none; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-triangle-exclamation"></i> Report Incident</a>
                 <span class="nav-alert-badge">⚠️ 2 Alerts</span>
+                <a href="auth.html" id="nav-auth-btn" class="nav-btn" style="padding: 8px 18px; font-size: 13px;">Sign In</a>
                 <button class="dark-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
                     <i class="fa-solid fa-sun icon-sun"></i>
                     <i class="fa-solid fa-moon icon-moon"></i>
@@ -41,36 +41,40 @@
         </div>
     </nav>
 
-    <main class="map-body">
-        <div class="map-page-container">
+    <main class="helplines-body">
+        <div class="helplines-page-container">
 
             <div class="page-header" style="display: flex; align-items: center; gap: 16px;">
                 <a class="back-btn" href="dashboard.html" aria-label="Back to dashboard">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
-                    <h1 style="margin-bottom: 2px;">Incident Map</h1>
-                    <p>Active alerts and community reports near you, colour-coded by severity.</p>
+                    <h1 style="margin-bottom: 2px;">Emergency Helplines</h1>
+                    <p>Select your state and district to find the right control room to call.</p>
                 </div>
             </div>
 
-            <div class="map-layout">
-                <div id="incident-map"></div>
-
-                <div class="map-legend">
-                    <h4>Severity</h4>
-                    <div><span class="legend-dot green"></span> Low</div>
-                    <div><span class="legend-dot orange"></span> Medium</div>
-                    <div><span class="legend-dot red"></span> High</div>
-                    <div><span class="legend-dot darkred"></span> Critical</div>
+            <div class="helpline-selector-card">
+                <div class="form-group">
+                    <label class="form-label" for="helpline-state">State</label>
+                    <select class="form-select" id="helpline-state">
+                        <option value="">Select a state…</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="helpline-district">District</label>
+                    <select class="form-select" id="helpline-district" disabled>
+                        <option value="">Select a district…</option>
+                    </select>
                 </div>
             </div>
+
+            <div class="helpline-results" id="helpline-results"></div>
 
         </div>
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/map.js"></script>
+    <script src="js/helplines.js"></script>
 </body>
 </html>

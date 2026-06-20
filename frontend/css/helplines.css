@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════
+   DeshSafe — helplines.css
+   ═══════════════════════════════════════════ */
+
+.helplines-body {
+    background: var(--bg-page);
+    min-height: 100vh;
+    padding: 32px 20px 48px;
+}
+.helplines-page-container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* ── Selector Card ── */
+.helpline-selector-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+/* ── Results ── */
+.helpline-results {
+    margin-top: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+}
+.helpline-results h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 20px 0 10px;
+}
+.helpline-results h3:first-child {
+    margin-top: 0;
+}
+
+.helpline-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.helpline-row:last-child {
+    border-bottom: none;
+}
+.helpline-label {
+    font-size: 13.5px;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+.helpline-call-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--red);
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.helpline-row-pending .helpline-pending-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .helpline-selector-card {
+        grid-template-columns: 1fr;
+    }
+    .helpline-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
