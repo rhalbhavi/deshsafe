@@ -30,14 +30,6 @@ function getMarkerIcon(severity) {
     });
 }
 
-// Spread out incidents that don't have coordinates so they don't all stack on the same point
-function jitterAroundCenter() {
-    return [
-        DEFAULT_CENTER[0] + (Math.random() - 0.5) * 0.06,
-        DEFAULT_CENTER[1] + (Math.random() - 0.5) * 0.06
-    ];
-}
-
 function addIncidentMarker(map, incident) {
     if (incident.lat == null || incident.lng == null) return;
 
@@ -90,19 +82,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Reports submitted from this device via the report form
         const userReports = await window.DeshSafe.getReports();
-        userReports.forEach(report => {
-            const hasCoords = report.lat != null && report.lng != null;
-            const [lat, lng] = hasCoords ? [report.lat, report.lng] : jitterAroundCenter();
-
-            addIncidentMarker(map, {
-                title: `${report.title} (${report.type})`,
-                description: report.description,
-                location: report.location,
-                severity: report.severity,
-                lat,
-                lng
-            });
-        });
+        userReports.forEach(report => addIncidentMarker(map, {
+            title: `${report.title} (${report.type})`,
+            description: report.description,
+            location: report.location,
+            severity: report.severity,
+            lat: report.lat,
+            lng: report.lng
+        }));
     } catch (err) {
         console.error('Failed to load incident data:', err);
         showMapErrorBanner();
