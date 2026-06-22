@@ -4,7 +4,7 @@ function updateDate() {
     const options={weekday:'long', year:'numeric', month:'long', day:'numeric'};
     const dateString = now.toLocaleDateString('en-IN', options);
     document.getElementById('greeting-date').innerHTML = 
-        dateString + ' · Stay safe today — 2 active alerts in your area';
+        dateString + ' · Stay safe today — <span id="alert-count">2</span> active alerts in ' + (localStorage.getItem('deshsafe_location') || 'your area');
 }
 
 if(document.getElementById('greeting-date')) {
@@ -57,38 +57,28 @@ function updateProgress() {
 steps.forEach(function(step) {
     step.addEventListener('click', function() {
         step.classList.toggle('completed');
-
         saveSteps();
-
         updateProgress();
     });
 });
 loadSteps();
 function saveSteps() {
     const completedIndices = [];
-
     steps.forEach((step, index) => {
         if (step.classList.contains('completed')) {
             completedIndices.push(index);
         }
     });
-
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(completedIndices)
-    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(completedIndices));
 }
 
 function loadSteps() {
-    const saved =
-        JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     saved.forEach(index => {
         if (steps[index]) {
             steps[index].classList.add('completed');
         }
     });
-
     updateProgress();
 }
 
@@ -107,7 +97,6 @@ function loadSteps() {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
-    // Apply immediately (before paint) to avoid flash
     applyTheme(getPreferred());
 
     window.toggleDarkMode = function () {
@@ -128,13 +117,13 @@ function getInitials(name) {
 
 // ── Auto Location Detection (IP-based) ──
 async function detectAndSetLocation() {
-    // Check cache first (avoid repeated API calls)
     const cached = localStorage.getItem('deshsafe_location');
     const cachedTime = localStorage.getItem('deshsafe_location_time');
     const ONE_HOUR = 60 * 60 * 1000;
 
     if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < ONE_HOUR) {
         _updateLocationUI(cached);
+        if (document.getElementById('greeting-date')) updateDate();
         return cached;
     }
 
@@ -144,17 +133,16 @@ async function detectAndSetLocation() {
 
         if (data && data.city) {
             const locationStr = `${data.city}, ${data.region}`;
-            // Cache it
             localStorage.setItem('deshsafe_location', locationStr);
             localStorage.setItem('deshsafe_location_time', Date.now().toString());
             _updateLocationUI(locationStr);
+            if (document.getElementById('greeting-date')) updateDate();
             return locationStr;
         }
     } catch (e) {
         console.warn('Could not detect location:', e);
     }
 
-    // Fallback
     _updateLocationUI('India');
     return 'India';
 }
@@ -167,7 +155,6 @@ function _updateLocationUI(locationStr) {
 
 // ── Consolidated Data Integration Layer (Single Source of Truth) ──
 window.DeshSafe = {
-    // ── Current logged-in user (set by auth guard) ──
     currentUser: null,
 
     async getProfile() {
@@ -350,7 +337,8 @@ window.DeshSafe = {
             avatar.textContent = initials;
         });
 
-        const locationStr = profile.location || localStorage.getItem('deshsafe_location') || 'India';
+        // FIX: auto-detected location takes priority over profile location
+        const locationStr = localStorage.getItem('deshsafe_location') || profile.location || 'India';
         document.querySelectorAll('.nav-location').forEach(navLoc => {
             navLoc.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${locationStr}`;
         });
@@ -417,6 +405,12 @@ window.DeshSafe = {
         const data = await this.fetchAlertsAndWeather();
         const weather = data.weather;
 
+        // FIX: update alert count in greeting dynamically
+        const alertCountEl = document.getElementById('alert-count');
+        if (alertCountEl && data.active_alerts) {
+            alertCountEl.textContent = data.active_alerts.length;
+        }
+
         if (weather) {
             if (typeof animateCounter === 'function') {
                 animateCounter('stat-temp', weather.temperature_c || 42, '°C');
@@ -448,9 +442,7 @@ window.DeshSafe = {
         if (alertsSection) {
             const header = alertsSection.querySelector('.section-header');
             alertsSection.innerHTML = '';
-            if (header) {
-                alertsSection.appendChild(header);
-            }
+            if (header) alertsSection.appendChild(header);
 
             const activeAlerts = data.active_alerts || [];
             if (activeAlerts.length === 0) {
@@ -472,9 +464,7 @@ window.DeshSafe = {
         if (historyCard) {
             const header = historyCard.querySelector('.section-header');
             historyCard.innerHTML = '';
-            if (header) {
-                historyCard.appendChild(header);
-            }
+            if (header) historyCard.appendChild(header);
 
             const communityReports = data.community_reports || [];
             const userReports = await this.getReports();
@@ -573,19 +563,10 @@ function renderHistoryItem(report) {
 
     let badgeClass = 'badge-amber';
     let statusText = report.status || 'Active';
-    if (statusText === 'resolved') {
-        badgeClass = 'badge-blue';
-        statusText = 'Resolved';
-    } else if (statusText === 'confirmed') {
-        badgeClass = 'badge-red';
-        statusText = 'Confirmed';
-    } else if (statusText === 'submitted') {
-        badgeClass = 'badge-red';
-        statusText = 'Submitted';
-    } else if (statusText === 'verifying') {
-        badgeClass = 'badge-amber';
-        statusText = 'Verifying';
-    }
+    if (statusText === 'resolved') { badgeClass = 'badge-blue'; statusText = 'Resolved'; }
+    else if (statusText === 'confirmed') { badgeClass = 'badge-red'; statusText = 'Confirmed'; }
+    else if (statusText === 'submitted') { badgeClass = 'badge-red'; statusText = 'Submitted'; }
+    else if (statusText === 'verifying') { badgeClass = 'badge-amber'; statusText = 'Verifying'; }
 
     const typeLabel = report.type.replace('_', ' ');
     const timeFormatted = formatReportTime(report.reported_at);
@@ -605,36 +586,24 @@ function renderHistoryItem(report) {
 function formatReportTime(dateStr) {
     const date = new Date(dateStr);
     const now = new Date();
-
     if (isNaN(date.getTime())) return dateStr;
-
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
-
-    if (diffMins < 60) {
-        return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
-    } else if (diffHours < 24) {
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    else if (diffHours < 24) {
         const isSameDay = date.getDate() === now.getDate();
-        if (isSameDay) {
-            return `Today, ${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
-        }
+        if (isSameDay) return `Today, ${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
     }
-
     const isYesterday = new Date(now - 86400000).getDate() === date.getDate();
-    if (isYesterday) {
-        return `Yesterday, ${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
+    if (isYesterday) return `Yesterday, ${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
     return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) + `, ${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 // Global initialization logic on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    // Detect and set location automatically
     detectAndSetLocation();
 
-    // 1. Set up auth state listener
     try {
         const { onAuthChange, logOut } = await import('./firebase.js');
 
@@ -642,7 +611,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.DeshSafe.currentUser = user || null;
 
             const protectedPages = ['dashboard.html', 'report.html', 'profile.html', 'action.html'];
-            const currentPage    = window.location.pathname.split('/').pop();
+            const currentPage = window.location.pathname.split('/').pop();
             if (!user && protectedPages.includes(currentPage)) {
                 window.location.href = 'auth.html';
                 return;
