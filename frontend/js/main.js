@@ -126,13 +126,50 @@ function getInitials(name) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+// ── Auto Location Detection (IP-based) ──
+async function detectAndSetLocation() {
+    // Check cache first (avoid repeated API calls)
+    const cached = localStorage.getItem('deshsafe_location');
+    const cachedTime = localStorage.getItem('deshsafe_location_time');
+    const ONE_HOUR = 60 * 60 * 1000;
+
+    if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < ONE_HOUR) {
+        _updateLocationUI(cached);
+        return cached;
+    }
+
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+
+        if (data && data.city) {
+            const locationStr = `${data.city}, ${data.region}`;
+            // Cache it
+            localStorage.setItem('deshsafe_location', locationStr);
+            localStorage.setItem('deshsafe_location_time', Date.now().toString());
+            _updateLocationUI(locationStr);
+            return locationStr;
+        }
+    } catch (e) {
+        console.warn('Could not detect location:', e);
+    }
+
+    // Fallback
+    _updateLocationUI('India');
+    return 'India';
+}
+
+function _updateLocationUI(locationStr) {
+    document.querySelectorAll('.nav-location').forEach(el => {
+        el.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${locationStr}`;
+    });
+}
+
 // ── Consolidated Data Integration Layer (Single Source of Truth) ──
 window.DeshSafe = {
     // ── Current logged-in user (set by auth guard) ──
     currentUser: null,
 
-    // Retrieves profile data from Firestore for the logged-in user.
-    // Falls back to a guest default if not authenticated.
     async getProfile() {
         if (this.currentUser) {
             try {
@@ -142,19 +179,17 @@ window.DeshSafe = {
                 console.error('Error fetching profile from Firestore:', e);
             }
         }
-        // Guest / unauthenticated fallback
         return {
             name: 'Guest',
             age: '',
             phone: '',
             familySize: '4 members',
-            location: 'India',
+            location: localStorage.getItem('deshsafe_location') || 'India',
             healthTags: [],
             preferences: { heatwave: true, flood: true, aqi: true, earthquake: false }
         };
     },
 
-    // Saves profile data to Firestore, dispatches updates, and triggers UI sync
     async saveProfile(profileData) {
         if (this.currentUser) {
             try {
@@ -168,7 +203,6 @@ window.DeshSafe = {
         this.syncUIWithProfile(profileData);
     },
 
-    // Retrieves the current user's submitted reports from Firestore
     async getReports() {
         if (this.currentUser) {
             try {
@@ -181,7 +215,6 @@ window.DeshSafe = {
         return [];
     },
 
-    // Saves a new incident report to Firestore
     async saveReport(report) {
         if (!this.currentUser) {
             console.warn('Cannot save report — user not authenticated.');
@@ -197,10 +230,6 @@ window.DeshSafe = {
         }
     },
 
-    // Fetches live alerts and weather data.
-    // Tries Firestore alerts collection first, falls back to static alerts.json.
-    // Firestore is time-boxed so an unconfigured/unreachable project can't block
-    // the page from ever rendering the static fallback data.
     async fetchAlertsAndWeather() {
         try {
             const firestoreReports = await this._withTimeout(
@@ -210,7 +239,6 @@ window.DeshSafe = {
                 })(),
                 4000
             );
-            // If Firestore has community reports, merge with static alert/weather data
             if (firestoreReports.length > 0) {
                 const staticData = await this._fetchStaticAlerts();
                 return { ...staticData, community_reports: firestoreReports };
@@ -218,11 +246,9 @@ window.DeshSafe = {
         } catch (e) {
             console.warn('Could not fetch Firestore reports, falling back:', e);
         }
-        // Fall back to static alerts.json
         return this._fetchStaticAlerts();
     },
 
-    // Internal: rejects with a timeout error if the given promise doesn't settle in time
     _withTimeout(promise, ms) {
         return Promise.race([
             promise,
@@ -230,7 +256,6 @@ window.DeshSafe = {
         ]);
     },
 
-    // Internal: fetches the static alerts.json with fallback mock data
     async _fetchStaticAlerts() {
         try {
             const res = await fetch('data/alerts.json');
@@ -240,7 +265,6 @@ window.DeshSafe = {
         } catch (e) {
             console.warn('Could not fetch alerts.json, using fallback data:', e);
         }
-        // Static mock data fallback (consistent with alerts.json structure)
         return {
             meta: { location: 'New Delhi, India', last_updated: new Date().toISOString() },
             active_alerts: [
@@ -319,29 +343,23 @@ window.DeshSafe = {
         };
     },
 
-    // Synchronizes the user profile elements globally across all pages
-    // Accepts a profile object directly (avoids redundant async call)
     syncUIWithProfile(profile) {
         const initials = getInitials(profile.name);
 
-        // 1. Sync avatar initials globally
         document.querySelectorAll('.nav-avatar, .avatar-ring').forEach(avatar => {
             avatar.textContent = initials;
         });
 
-        // 2. Sync location indicator in navbar
-        const locationStr = profile.location || 'New Delhi, India';
+        const locationStr = profile.location || localStorage.getItem('deshsafe_location') || 'India';
         document.querySelectorAll('.nav-location').forEach(navLoc => {
             navLoc.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${locationStr}`;
         });
 
-        // 3. Sync profile page identity name
         const identityName = document.querySelector('.identity-name');
         if (identityName) {
             identityName.textContent = profile.name || 'Anonymous';
         }
 
-        // 4. Sync dashboard greeting title
         const greetingTitle = document.querySelector('.greeting-title');
         if (greetingTitle) {
             const hr = new Date().getHours();
@@ -353,7 +371,6 @@ window.DeshSafe = {
             greetingTitle.innerHTML = `Good ${timeOfDay}, ${firstName} 👋`;
         }
 
-        // 5. Sync Action Plan personalization cards (action.html)
         const profileCard = document.querySelector('.profile-card');
         if (profileCard) {
             const items = profileCard.querySelectorAll('.profile-item');
@@ -378,7 +395,6 @@ window.DeshSafe = {
             }
         }
 
-        // 6. Dynamic personalization of dashboard safety risk details
         const safetyCard = document.querySelector('.safety-card');
         if (safetyCard) {
             const safetyItems = safetyCard.querySelectorAll('.safety-item');
@@ -391,27 +407,23 @@ window.DeshSafe = {
         }
     },
 
-    // Synchronizes UI on page load by fetching profile from Firestore first
     async syncUI() {
         const profile = await this.getProfile();
         this.syncUIWithProfile(profile);
     },
 
-    // Fetches live data and populates dashboard alerts, weather, and history dynamically
     async initializeDashboard() {
         const profile = await this.getProfile();
         const data = await this.fetchAlertsAndWeather();
         const weather = data.weather;
 
         if (weather) {
-            // Drive dynamic counter animations
             if (typeof animateCounter === 'function') {
                 animateCounter('stat-temp', weather.temperature_c || 42, '°C');
                 animateCounter('stat-aqi', weather.aqi || 168, '');
                 animateCounter('stat-humidity', weather.humidity_percent || 28, '%');
             }
 
-            // Populate weather card widget
             const weatherCard = document.querySelector('.weather-card');
             if (weatherCard) {
                 const locEl = weatherCard.querySelector('.weather-location');
@@ -419,7 +431,8 @@ window.DeshSafe = {
                 const descEl = weatherCard.querySelector('.weather-desc');
                 const statVals = weatherCard.querySelectorAll('.weather-stat-val');
 
-                if (locEl) locEl.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${profile.location || data.meta.location || 'New Delhi, India'}`;
+                const displayLocation = localStorage.getItem('deshsafe_location') || profile.location || data.meta.location || 'New Delhi, India';
+                if (locEl) locEl.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${displayLocation}`;
                 if (tempEl) tempEl.textContent = `${weather.temperature_c}°C`;
                 if (descEl) descEl.textContent = `${weather.condition} · Feels like ${weather.feels_like_c}°C`;
 
@@ -431,7 +444,6 @@ window.DeshSafe = {
             }
         }
 
-        // Render Active Alerts dynamically
         const alertsSection = document.querySelector('.alerts-section');
         if (alertsSection) {
             const header = alertsSection.querySelector('.section-header');
@@ -456,7 +468,6 @@ window.DeshSafe = {
             }
         }
 
-        // Render merged Report History (Community reports + User reports)
         const historyCard = document.querySelector('.history-card');
         if (historyCard) {
             const header = historyCard.querySelector('.section-header');
@@ -467,10 +478,8 @@ window.DeshSafe = {
 
             const communityReports = data.community_reports || [];
             const userReports = await this.getReports();
-            // Reports saved locally because Firestore was unreachable at submit time
             const localReports = typeof getStoredReports === 'function' ? getStoredReports() : [];
 
-            // Format user-submitted reports for the unified view
             const formattedUserReports = [...userReports, ...localReports].map(rep => ({
                 id: rep.id,
                 type: rep.type.toLowerCase(),
@@ -622,6 +631,9 @@ function formatReportTime(dateStr) {
 
 // Global initialization logic on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    // Detect and set location automatically
+    detectAndSetLocation();
+
     // 1. Set up auth state listener
     try {
         const { onAuthChange, logOut } = await import('./firebase.js');
@@ -629,7 +641,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         onAuthChange(async (user) => {
             window.DeshSafe.currentUser = user || null;
 
-            // Auth guard: protect dashboard, report, profile, action pages
             const protectedPages = ['dashboard.html', 'report.html', 'profile.html', 'action.html'];
             const currentPage    = window.location.pathname.split('/').pop();
             if (!user && protectedPages.includes(currentPage)) {
@@ -637,19 +648,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // 2. Sync global UI elements using Firestore profile
             await window.DeshSafe.syncUI();
-
-            // 3. Update navbar auth button state
             _updateNavAuthButton(user, logOut);
 
-            // 4. Initialize dashboard dynamics if present
             if (document.getElementById('stat-temp') || document.querySelector('.alerts-section')) {
                 await window.DeshSafe.initializeDashboard();
             }
         });
     } catch (e) {
-        // Firebase not yet configured — run without auth for local preview
         console.warn('Firebase not configured. Running in offline/preview mode.', e);
         await window.DeshSafe.syncUI();
         if (document.getElementById('stat-temp') || document.querySelector('.alerts-section')) {
