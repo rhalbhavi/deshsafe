@@ -1,0 +1,12 @@
+{
+  "name": "deshsafe",
+  "version": "1.0.0",
+  "description": "DeshSafe - Emergency Safety Platform for India",
+  "scripts": {
+    "start": "live-server frontend",
+    "dev": "live-server frontend"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

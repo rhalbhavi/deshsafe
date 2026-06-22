@@ -31,15 +31,13 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ── Firebase Config ──
-// Replace these values with your actual Firebase project config.
-// Get it from: Firebase Console → Project Settings → Your apps → SDK setup
 const firebaseConfig = {
-    apiKey:            "YOUR_API_KEY",
-    authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId:         "YOUR_PROJECT_ID",
-    storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId:             "YOUR_APP_ID"
+    apiKey:            "AIzaSyBFxZCUhI_BTrgmSHaIlG9DsxdaSGrMqvw",
+    authDomain:        "deshsafe-a6899.firebaseapp.com",
+    projectId:         "deshsafe-a6899",
+    storageBucket:     "deshsafe-a6899.firebasestorage.app",
+    messagingSenderId: "303695719806",
+    appId:             "1:303695719806:web:4f1c60ba3c9b514f95972f"
 };
 
 // ── Init ──
