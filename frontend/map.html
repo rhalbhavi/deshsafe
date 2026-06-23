@@ -54,6 +54,50 @@
                 </div>
             </div>
 
+            <!-- Map Filter Controls -->
+            <div class="card map-filters" style="margin-bottom: 20px;">
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="filter-type">Incident Type</label>
+                        <select id="filter-type" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="heatwave">Heatwave</option>
+                            <option value="flood">Flood</option>
+                            <option value="fire">Fire</option>
+                            <option value="cyclone">Storm / Cyclone</option>
+                            <option value="accident">Accident</option>
+                            <option value="landslide">Landslide</option>
+                            <option value="drought">Drought</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filter-severity">Severity</label>
+                        <select id="filter-severity" class="form-select">
+                            <option value="">All Severities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Moderate / Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filter-start-date">Start Date</label>
+                        <input type="date" id="filter-start-date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filter-end-date">End Date</label>
+                        <input type="date" id="filter-end-date" class="form-input">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: row; gap: 8px; justify-content: flex-end;">
+                        <button id="btn-apply-filters" class="nav-btn" style="border: none; cursor: pointer; flex: 1; height: 38px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;">Apply</button>
+                        <button id="btn-reset-filters" class="back-btn" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; box-shadow: var(--shadow-sm);" title="Reset Filters">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="map-layout">
                 <div id="incident-map"></div>
 
@@ -71,6 +115,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.14.1/dist/Leaflet.GoogleMutant.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/main.js"></script>

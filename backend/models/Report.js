@@ -1,4 +1,4 @@
-const VALID_TYPES = ['flood','earthquake','fire','accident','cyclone','landslide','drought','other'];
+const VALID_TYPES = ['flood','earthquake','fire','accident','cyclone','landslide','drought','heatwave','air_quality','other'];
 const VALID_SEVERITY = ['low','medium','high','critical'];
 const VALID_STATUS = ['pending','verified','rejected','resolved'];
 
