@@ -4,9 +4,18 @@
   "description": "DeshSafe - Emergency Safety Platform for India",
   "scripts": {
     "start": "live-server frontend",
-    "dev": "live-server frontend"
+    "dev": "live-server frontend",
+    "server": "node server/index.js",
+    "dev:all": "concurrently -n api,web -c blue,green \"npm run server\" \"npm run dev\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "live-server": "^1.2.2"
   }
 }

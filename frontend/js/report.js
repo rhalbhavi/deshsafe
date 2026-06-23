@@ -69,6 +69,48 @@ function previewPhoto(event) {
     }
 }
 
+// ── Geocoding API helpers ──
+
+function getApiBase() {
+    const base = window.DeshSafeConfig?.API_BASE_URL;
+    return base ? base.replace(/\/$/, '') : '';
+}
+
+async function reverseGeocodeCoords(lat, lng) {
+    const base = getApiBase();
+    if (base) {
+        const res = await fetch(
+            `${base}/api/reverse-geocode?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
+        );
+        if (!res.ok) throw new Error('Reverse geocode failed');
+        return res.json();
+    }
+
+    const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
+    const data = await res.json();
+    return {
+        address: data.display_name || `${lat}, ${lng}`,
+        formattedAddress: data.display_name || `${lat}, ${lng}`,
+        district: data.address?.state_district || data.address?.county || null,
+        state: data.address?.state || null,
+        lat,
+        lng
+    };
+}
+
+async function geocodeAddressText(address) {
+    const base = getApiBase();
+    if (!base) return null;
+
+    const res = await fetch(
+        `${base}/api/geocode?address=${encodeURIComponent(address)}`
+    );
+    if (!res.ok) throw new Error('Geocode failed');
+    return res.json();
+}
+
 // ── Geolocation ──
 function detectLocation() {
     const status = document.getElementById('gps-status');
@@ -99,14 +141,11 @@ function detectLocation() {
 
             const accuracyText = `±${Math.round(accuracy)}m accuracy`;
             try {
-                const res = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-                );
-                const data = await res.json();
-                const address = data.display_name || `${latitude}, ${longitude}`;
-                locationInput.value = address;
+                const data = await reverseGeocodeCoords(latitude, longitude);
+                locationInput.value = data.formattedAddress || data.address;
+                if (data.district) locationInput.dataset.district = data.district;
+                if (data.state) locationInput.dataset.state = data.state;
                 if (status) status.textContent = `✅ Location captured (${accuracyText})`;
-                // Clear error style since value is entered
                 clearFieldError(locationInput);
             } catch {
                 locationInput.value = `${latitude}, ${longitude}`;
@@ -227,8 +266,26 @@ async function submitReport() {
         return;
     }
 
-    // All fields valid — prepare report object
+    // All fields valid — resolve coordinates if missing
     const randomId = 'DS-' + Math.floor(1000 + Math.random() * 9000);
+    let lat = parseFloat(document.getElementById('report-lat')?.value) || null;
+    let lng = parseFloat(document.getElementById('report-lng')?.value) || null;
+    let district = locationEl?.dataset?.district || null;
+    let state = locationEl?.dataset?.state || null;
+
+    if ((!lat || !lng) && location) {
+        try {
+            const geo = await geocodeAddressText(location);
+            if (geo) {
+                lat = geo.lat;
+                lng = geo.lng;
+                district = geo.district || district;
+                state = geo.state || state;
+            }
+        } catch (err) {
+            console.warn('Forward geocode failed, saving without coordinates:', err);
+        }
+    }
 
     const report = {
         id:          randomId,
@@ -237,9 +294,11 @@ async function submitReport() {
         title,
         description: desc,
         location,
+        district,
+        state,
         time,
-        lat: parseFloat(document.getElementById('report-lat')?.value) || null,
-        lng: parseFloat(document.getElementById('report-lng')?.value) || null,
+        lat,
+        lng,
         photo: photoBase64 || null,
         submittedAt: new Date().toISOString()
     };

@@ -47,16 +47,52 @@ function addIncidentMarker(map, incident) {
     `);
 }
 
+function loadGoogleMapsScript(apiKey) {
+    if (!apiKey || apiKey === 'your_google_maps_api_key_here') return Promise.reject(new Error('No Google Maps API key'));
+    if (window.google?.maps) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}`;
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Failed to load Google Maps'));
+        document.head.appendChild(script);
+    });
+}
+
+function addMapTileLayer(map) {
+    const apiKey = window.DeshSafeConfig?.GOOGLE_MAPS_API_KEY;
+
+    if (apiKey && typeof L.gridLayer?.googleMutant === 'function') {
+        return loadGoogleMapsScript(apiKey).then(() => {
+            L.gridLayer.googleMutant({ type: 'roadmap' }).addTo(map);
+        });
+    }
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+    return Promise.resolve();
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const mapEl = document.getElementById('incident-map');
     if (!mapEl || typeof L === 'undefined') return;
 
     const map = L.map('incident-map').setView(DEFAULT_CENTER, 11);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-    }).addTo(map);
+    try {
+        await addMapTileLayer(map);
+    } catch (err) {
+        console.warn('Google Maps unavailable, using OpenStreetMap:', err);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+    }
 
     try {
         const data = await window.DeshSafe.fetchAlertsAndWeather();
