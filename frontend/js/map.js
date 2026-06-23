@@ -5,12 +5,15 @@
 const DEFAULT_CENTER = [28.6139, 77.2090]; // New Delhi
 
 const severityColors = {
-    low: 'green',
-    medium: 'orange',
-    moderate: 'orange',
-    high: 'red',
-    critical: 'darkred'
+    low: '#48BB78',       // Green
+    medium: '#FFB347',    // Orange
+    moderate: '#FFB347',  // Orange
+    high: '#FF6B6B',      // Red
+    critical: '#8B0000'   // Dark Red
 };
+
+let activeMarkers = [];
+let staticAlerts = [];
 
 // Colour-coded divIcon for an incident marker, based on its severity level
 function getMarkerIcon(severity) {
@@ -31,20 +34,148 @@ function getMarkerIcon(severity) {
 }
 
 function addIncidentMarker(map, incident) {
-    if (incident.lat == null || incident.lng == null) return;
+    if (incident.lat == null || incident.lng == null) return null;
 
     const marker = L.marker([incident.lat, incident.lng], {
         icon: getMarkerIcon(incident.severity)
     }).addTo(map);
 
     const severity = (incident.severity || 'unknown').toLowerCase();
+    const typeLabel = (incident.type || 'incident').replace('_', ' ').toUpperCase();
+    const statusText = (incident.status || 'active').toUpperCase();
+    const timeFormatted = incident.createdAt 
+        ? (typeof formatReportTime === 'function' ? formatReportTime(incident.createdAt) : new Date(incident.createdAt).toLocaleString()) 
+        : 'Just now';
 
     marker.bindPopup(`
-        <strong>${incident.title}</strong>
-        <span class="severity-badge ${severity}">${severity.toUpperCase()}</span>
-        ${incident.description ? `<p>${incident.description}</p>` : ''}
-        <small><i class="fa-solid fa-location-dot"></i> ${incident.location || 'Unknown location'}</small>
+        <div style="font-family: inherit; min-width: 200px;">
+            <strong style="display: block; font-size: 13.5px; color: var(--text-dark); margin-bottom: 4px;">
+                ${typeLabel}: ${incident.title || 'Report'}
+            </strong>
+            <span class="severity-badge ${severity}" style="margin-left: 0; margin-bottom: 6px;">${severity.toUpperCase()}</span>
+            <p style="font-size: 12.5px; color: var(--text-mid); margin: 6px 0; line-height: 1.5;">
+                ${incident.description || 'No description provided.'}
+            </p>
+            <div style="font-size: 11px; margin-top: 8px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
+                <span><i class="fa-solid fa-clock"></i> Reported: ${timeFormatted}</span>
+                <span><i class="fa-solid fa-location-dot"></i> ${incident.location || 'Unknown location'}</span>
+                <span><i class="fa-solid fa-circle-info"></i> Status: <span class="status-${severity}" style="font-weight: 700; color: ${severityColors[severity] || 'gray'};">${statusText}</span></span>
+            </div>
+        </div>
     `);
+
+    return marker;
+}
+
+async function fetchAndPlotIncidents(map) {
+    const type = document.getElementById('filter-type')?.value || '';
+    const severity = document.getElementById('filter-severity')?.value || '';
+    const startDate = document.getElementById('filter-start-date')?.value || '';
+    const endDate = document.getElementById('filter-end-date')?.value || '';
+
+    // Clear existing markers from the map
+    activeMarkers.forEach(m => map.removeLayer(m));
+    activeMarkers = [];
+
+    // Plot filtered agency/weather alerts first
+    staticAlerts.forEach(alert => {
+        const typeMatch = !type || alert.type === type;
+        const severityMatch = !severity || alert.severity === severity;
+        if (typeMatch && severityMatch) {
+            const marker = addIncidentMarker(map, {
+                title: alert.title,
+                type: alert.type,
+                description: alert.description,
+                location: alert.location,
+                severity: alert.severity,
+                lat: alert.lat,
+                lng: alert.lng,
+                createdAt: new Date().toISOString(),
+                status: 'verified'
+            });
+            if (marker) activeMarkers.push(marker);
+        }
+    });
+
+    // Plot local/device reports stored in LocalStorage (e.g., submitted offline)
+    const localReports = typeof getStoredReports === 'function' ? getStoredReports() : [];
+    localReports.forEach(report => {
+        const reportType = (report.type || '').toLowerCase();
+        // Map frontend types to backend types for matching
+        const typeMapping = {
+            'heatwave': 'heatwave',
+            'flood': 'flood',
+            'fire': 'fire',
+            'storm / cyclone': 'cyclone',
+            'building collapse': 'other',
+            'other crisis': 'other'
+        };
+        const mappedType = typeMapping[reportType] || reportType;
+        const typeMatch = !type || mappedType === type;
+        const severityMatch = !severity || report.severity === severity;
+
+        const reportTime = report.submittedAt ? new Date(report.submittedAt).getTime() : Date.now();
+        const startMatch = !startDate || reportTime >= new Date(startDate).getTime();
+        let endMatch = true;
+        if (endDate) {
+            const endLimit = new Date(endDate);
+            endLimit.setHours(23, 59, 59, 999);
+            endMatch = reportTime <= endLimit.getTime();
+        }
+
+        if (typeMatch && severityMatch && startMatch && endMatch) {
+            const hasCoords = report.lat != null && report.lng != null;
+            const [lat, lng] = hasCoords ? [report.lat, report.lng] : DEFAULT_CENTER;
+            const marker = addIncidentMarker(map, {
+                title: report.title,
+                type: mappedType,
+                description: report.description,
+                location: report.location,
+                severity: report.severity,
+                lat,
+                lng,
+                createdAt: report.submittedAt || new Date().toISOString(),
+                status: 'submitted'
+            });
+            if (marker) activeMarkers.push(marker);
+        }
+    });
+
+    const apiBase = window.DeshSafeConfig?.API_BASE_URL || 'http://localhost:3001';
+    let url = `${apiBase}/api/reports?limit=100`;
+    if (type) url += `&type=${encodeURIComponent(type)}`;
+    if (severity) url += `&severity=${encodeURIComponent(severity)}`;
+    if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+    if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('API fetch failed');
+        const data = await response.json();
+
+        // Plot database community reports
+        const reports = data.reports || [];
+        reports.forEach(report => {
+            if (report.location && report.location.lat != null && report.location.lng != null) {
+                const marker = addIncidentMarker(map, {
+                    id: report._id,
+                    title: report.description ? (report.description.substring(0, 30) + '...') : 'Community Report',
+                    type: report.type,
+                    description: report.description,
+                    location: report.location.address || `${report.location.lat}, ${report.location.lng}`,
+                    severity: report.severity,
+                    lat: report.location.lat,
+                    lng: report.location.lng,
+                    createdAt: report.createdAt,
+                    status: report.status
+                });
+                if (marker) activeMarkers.push(marker);
+            }
+        });
+    } catch (err) {
+        console.warn('Failed to load incident reports from backend API:', err);
+        showMapErrorBanner();
+    }
 }
 
 function loadGoogleMapsScript(apiKey) {
@@ -94,57 +225,136 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).addTo(map);
     }
 
+    // Geolocation: Auto-center on user's current GPS location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 13);
+            },
+            (error) => {
+                console.warn('[Geolocation] Permission denied or unavailable:', error.message);
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        );
+    }
+
     try {
+        // Fetch static alerts first
         const data = await window.DeshSafe.fetchAlertsAndWeather();
-
-        // Active alerts (heatwave, air quality, etc.)
-        (data.active_alerts || []).forEach(alert => addIncidentMarker(map, {
-            title: alert.title,
-            description: alert.description,
-            location: alert.location,
-            severity: alert.severity,
-            lat: alert.lat,
-            lng: alert.lng
-        }));
-
-        // Community-submitted reports from sample data
-        (data.community_reports || []).forEach(report => addIncidentMarker(map, {
-            title: report.title,
-            location: report.location,
-            severity: report.severity,
-            lat: report.lat,
-            lng: report.lng
-        }));
-
-        // Reports submitted from this device via the report form, plus any
-        // saved locally because Firestore was unreachable at submit time
-        const userReports = await window.DeshSafe.getReports();
-        const localReports = typeof getStoredReports === 'function' ? getStoredReports() : [];
-        [...userReports, ...localReports].forEach(report => {
-            const hasCoords = report.lat != null && report.lng != null;
-            const [lat, lng] = hasCoords ? [report.lat, report.lng] : jitterAroundCenter();
-
-            addIncidentMarker(map, {
-                title: `${report.title} (${report.type})`,
-                description: report.description,
-                location: report.location,
-                severity: report.severity,
-                lat,
-                lng
-            });
-        });
+        staticAlerts = data.active_alerts || [];
     } catch (err) {
-        console.error('Failed to load incident data:', err);
-        showMapErrorBanner();
+        console.error('Failed to load static alerts:', err);
+    }
+
+    // Fetch and plot reports initially
+    try {
+        await fetchAndPlotIncidents(map);
+    } catch (err) {
+        console.error('Initial load failed:', err);
+        showMapErrorBanner(`JS Error on load: ${err.message}`);
+    }
+
+    // Setup Filter Event Listeners
+    document.getElementById('btn-apply-filters')?.addEventListener('click', async () => {
+        try {
+            await fetchAndPlotIncidents(map);
+        } catch (err) {
+            console.error('Filter apply failed:', err);
+            alert(`Failed to apply filters: ${err.message}`);
+        }
+    });
+
+    document.getElementById('btn-reset-filters')?.addEventListener('click', () => {
+        const filterType = document.getElementById('filter-type');
+        const filterSeverity = document.getElementById('filter-severity');
+        const filterStartDate = document.getElementById('filter-start-date');
+        const filterEndDate = document.getElementById('filter-end-date');
+
+        if (filterType) filterType.value = '';
+        if (filterSeverity) filterSeverity.value = '';
+        if (filterStartDate) filterStartDate.value = '';
+        if (filterEndDate) filterEndDate.value = '';
+
+        fetchAndPlotIncidents(map);
+    });
+
+    // Socket.io Client Setup for Real-time Incidents
+    const apiBase = window.DeshSafeConfig?.API_BASE_URL || 'http://localhost:3001';
+    try {
+        if (typeof io !== 'undefined') {
+            const socket = io(apiBase);
+
+            socket.on('connect', () => {
+                console.log('[Socket.io] Connected to backend events server');
+            });
+
+            socket.on('new-incident', (report) => {
+                console.log('[Socket.io] Real-time incident received:', report);
+
+                const filterType = document.getElementById('filter-type')?.value;
+                const filterSeverity = document.getElementById('filter-severity')?.value;
+                const filterStartDate = document.getElementById('filter-start-date')?.value;
+                const filterEndDate = document.getElementById('filter-end-date')?.value;
+
+                const typeMatch = !filterType || report.type === filterType;
+                const severityMatch = !filterSeverity || report.severity === filterSeverity;
+                
+                const reportTime = new Date(report.createdAt).getTime();
+                const startMatch = !filterStartDate || reportTime >= new Date(filterStartDate).getTime();
+                
+                let endMatch = true;
+                if (filterEndDate) {
+                    const endLimit = new Date(filterEndDate);
+                    endLimit.setHours(23, 59, 59, 999);
+                    endMatch = reportTime <= endLimit.getTime();
+                }
+
+                if (typeMatch && severityMatch && startMatch && endMatch) {
+                    if (report.location && report.location.lat != null && report.location.lng != null) {
+                        // Avoid duplicates
+                        const alreadyExists = activeMarkers.some(m => {
+                            const latlng = m.getLatLng();
+                            return Math.abs(latlng.lat - report.location.lat) < 0.0001 && 
+                                   Math.abs(latlng.lng - report.location.lng) < 0.0001;
+                        });
+
+                        if (!alreadyExists) {
+                            const marker = addIncidentMarker(map, {
+                                id: report._id,
+                                title: report.description ? (report.description.substring(0, 30) + '...') : 'Community Report',
+                                type: report.type,
+                                description: report.description,
+                                location: report.location.address || `${report.location.lat}, ${report.location.lng}`,
+                                severity: report.severity,
+                                lat: report.location.lat,
+                                lng: report.location.lng,
+                                createdAt: report.createdAt,
+                                status: report.status
+                            });
+                            if (marker) {
+                                activeMarkers.push(marker);
+                                marker.openPopup();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (err) {
+        console.warn('Socket.io client connection failed:', err);
     }
 });
 
 // User-facing fallback if alerts/reports fail to load entirely
-function showMapErrorBanner() {
+function showMapErrorBanner(customMessage) {
+    // Avoid double banners
+    if (document.querySelector('.map-error-banner')) return;
+    
     const container = document.querySelector('.map-page-container');
     if (!container) return;
     const banner = document.createElement('div');
     banner.className = 'map-error-banner';
-    banner.textContent = 'Unable to load live incident data. Please refresh the page or try again later.';
+    banner.textContent = customMessage || 'Unable to connect to live incident service. Showing static/cached reports.';
     container.prepend(banner);
 }

@@ -78,3 +78,17 @@
         height: 420px;
     }
 }
+
+/* ── Map Filters ── */
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+@media (max-width: 760px) {
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+}
