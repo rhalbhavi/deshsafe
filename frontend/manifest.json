@@ -1,0 +1,22 @@
+{
+  "name": "DeshSafe Disaster Response",
+  "short_name": "DeshSafe",
+  "description": "Real-time disaster alerts and AI-powered action plans.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1A1A2E",
+  "theme_color": "#1A1A2E",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

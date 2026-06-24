@@ -750,3 +750,27 @@ body {
 .legend-dot.red     { background: var(--red); }
 .legend-dot.darkred { background: var(--darkred); }
 
+/* ── Offline Banner ── */
+.offline-banner {
+    background-color: var(--red-dark);
+    color: #ffffff;
+    text-align: center;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+

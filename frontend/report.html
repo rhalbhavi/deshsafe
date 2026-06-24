@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeshSafe — Report an Incident</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1A1A2E">
     <link rel="stylesheet" href="css/report.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script>!function(){var t=localStorage.getItem("deshsafe-theme");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}();</script>
 </head>
 <body>
+    <div id="offline-banner" class="offline-banner" style="display: none;">
+        <i class="fa-solid fa-wifi-slash"></i>
+        <span>You are currently offline. DeshSafe will queue your reports and sync them when you are back online.</span>
+    </div>
 
     <nav class="navbar">
         <div class="nav-container">

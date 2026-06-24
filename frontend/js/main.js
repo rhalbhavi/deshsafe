@@ -207,13 +207,94 @@ window.DeshSafe = {
             console.warn('Cannot save report — user not authenticated.');
             return;
         }
+
+        const apiBase = window.DeshSafeConfig?.API_BASE_URL || 'http://localhost:3001';
+        let token = null;
+        try {
+            token = await this.currentUser.getIdToken();
+        } catch (e) {
+            console.warn('Failed to get Firebase token:', e);
+        }
+
+        let dbSuccess = false;
+        let apiSuccess = false;
+
+        // 1. Try Firestore
         try {
             const { saveReport } = await import('./firebase.js');
             await saveReport(this.currentUser.uid, report);
             window.dispatchEvent(new CustomEvent('deshsafe-reports-update'));
+            dbSuccess = true;
         } catch (e) {
-            console.error('Error saving report to Firestore:', e);
-            throw e;
+            console.warn('Failed to save to Firestore:', e);
+        }
+
+        // 2. Try backend API POST /api/reports
+        if (navigator.onLine) {
+            try {
+                const typeMapping = {
+                    'heatwave': 'heatwave',
+                    'flood': 'flood',
+                    'fire': 'fire',
+                    'storm / cyclone': 'cyclone',
+                    'building collapse': 'other',
+                    'other crisis': 'other'
+                };
+                const mappedType = typeMapping[(report.type || '').toLowerCase()] || 'other';
+
+                const payload = {
+                    type: mappedType,
+                    severity: report.severity || 'medium',
+                    description: `${report.title || 'No Title'}\n\n${report.description || ''}`.trim(),
+                    location: {
+                        lat: report.lat || 0,
+                        lng: report.lng || 0,
+                        address: report.location || 'Unknown',
+                        district: report.district || null,
+                        state: report.state || null
+                    },
+                    photoUrl: report.photo || null
+                };
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const res = await fetch(`${apiBase}/api/reports`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.status === 201 || res.status === 200) {
+                    apiSuccess = true;
+                } else {
+                    console.warn(`API returned status ${res.status}`);
+                }
+            } catch (e) {
+                console.warn('Failed to POST report to API:', e);
+            }
+        }
+
+        // 3. Handle failure cases / offline queuing
+        if (!dbSuccess || !apiSuccess) {
+            // Queue for background sync in IndexedDB
+            try {
+                await window.DeshSafeSyncQueue.queueReport(report, apiBase, token);
+                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                    const reg = await navigator.serviceWorker.ready;
+                    await reg.sync.register('sync-reports');
+                    console.log('[DeshSafe] Registered background sync tag "sync-reports"');
+                }
+            } catch (err) {
+                console.error('[DeshSafe] Failed to queue report in IndexedDB:', err);
+            }
+
+            // Throw error to trigger report.js fallback to local storage & offline UI notice
+            throw new Error('Report queued offline. It will be synced when online.');
         }
     },
 
@@ -600,9 +681,181 @@ function formatReportTime(dateStr) {
     return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) + `, ${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
+// ══════════════════════════════════════════
+//  PWA: SERVICE WORKER & INDEXEDDB SYNC
+// ══════════════════════════════════════════
+
+const DB_NAME = 'deshsafe-db';
+const STORE_NAME = 'reports-queue';
+
+window.DeshSafeSyncQueue = {
+    openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = (event) => resolve(event.target.result);
+            request.onerror = (event) => reject(event.target.error);
+        });
+    },
+
+    async queueReport(report, apiBase, authToken) {
+        const db = await this.openDB();
+        const item = {
+            id: report.id || 'report-' + Date.now(),
+            report,
+            apiBase,
+            authToken,
+            timestamp: Date.now()
+        };
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.put(item);
+            request.onsuccess = () => {
+                console.log('[Sync Queue] Report queued successfully in IndexedDB:', item.id);
+                resolve();
+            };
+            request.onerror = (event) => reject(event.target.error);
+        });
+    },
+
+    async getQueuedReports() {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(STORE_NAME, 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (event) => reject(event.target.error);
+        });
+    },
+
+    async removeQueuedReport(id) {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = (event) => reject(event.target.error);
+        });
+    },
+
+    async syncQueue() {
+        if (!navigator.onLine) return;
+        try {
+            const reports = await this.getQueuedReports();
+            if (!reports || reports.length === 0) return;
+
+            console.log(`[Sync Queue] Attempting to sync ${reports.length} queued reports...`);
+
+            let token = null;
+            if (window.DeshSafe.currentUser) {
+                try {
+                    token = await window.DeshSafe.currentUser.getIdToken();
+                } catch (e) {
+                    console.warn('[Sync Queue] Failed to get fresh auth token:', e);
+                }
+            }
+
+            for (const item of reports) {
+                const { report, apiBase } = item;
+                const useToken = token || item.authToken;
+
+                const typeMapping = {
+                    'heatwave': 'heatwave',
+                    'flood': 'flood',
+                    'fire': 'fire',
+                    'storm / cyclone': 'cyclone',
+                    'building collapse': 'other',
+                    'other crisis': 'other'
+                };
+                const mappedType = typeMapping[(report.type || '').toLowerCase()] || 'other';
+
+                const payload = {
+                    type: mappedType,
+                    severity: report.severity || 'medium',
+                    description: `${report.title || 'No Title'}\n\n${report.description || ''}`.trim(),
+                    location: {
+                        lat: report.lat || 0,
+                        lng: report.lng || 0,
+                        address: report.location || 'Unknown',
+                        district: report.district || null,
+                        state: report.state || null
+                    },
+                    photoUrl: report.photo || null
+                };
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (useToken) {
+                    headers['Authorization'] = `Bearer ${useToken}`;
+                }
+
+                try {
+                    const res = await fetch(`${apiBase}/api/reports`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.status === 201 || res.status === 200) {
+                        console.log(`[Sync Queue] Successfully synced report: ${item.id}`);
+                        await this.removeQueuedReport(item.id);
+                    } else if (res.status === 401 || res.status === 403) {
+                        console.warn(`[Sync Queue] Authentication error for report: ${item.id}. Will retry when session refreshes.`);
+                    } else {
+                        console.warn(`[Sync Queue] Failed to sync report (status ${res.status}): ${item.id}`);
+                    }
+                } catch (err) {
+                    console.error(`[Sync Queue] Network error while syncing report: ${item.id}`, err);
+                    break;
+                }
+            }
+        } catch (err) {
+            console.error('[Sync Queue] Error in syncQueue:', err);
+        }
+    }
+};
+
+function updateOnlineStatus() {
+    const banner = document.getElementById('offline-banner');
+    if (!banner) return;
+    if (navigator.onLine) {
+        banner.style.display = 'none';
+        window.DeshSafeSyncQueue.syncQueue();
+    } else {
+        banner.style.display = 'flex';
+    }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
 // Global initialization logic on page load
 document.addEventListener('DOMContentLoaded', async () => {
     detectAndSetLocation();
+    updateOnlineStatus();
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+                console.log('[DeshSafe] Service Worker registered scope:', reg.scope);
+                if (navigator.onLine) {
+                    window.DeshSafeSyncQueue.syncQueue();
+                }
+            })
+            .catch(err => {
+                console.error('[DeshSafe] Service Worker registration failed:', err);
+            });
+    }
 
     try {
         const { onAuthChange, logOut } = await import('./firebase.js');
